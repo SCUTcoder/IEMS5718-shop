@@ -12,7 +12,8 @@
 
 ## 项目预览
 
-![readme](https://raw.githubusercontent.com/SCUTcoder/IEMS5718-shop/938b6665dc94704c22ac0fdf876512f5e326041a/images/readme.pic.jpg)
+![readme](images/readme.pic.jpg)
+
 
 ---
 
