@@ -1,6 +1,4 @@
-# IEMS5718-shop
-
-用于章节个人作业完成
+# IEMS5718-shop 用于章节个人作业完成
 
 ---
 
@@ -10,7 +8,7 @@
 
 ---
 
-## 项目预览
+## 章程的告诫
 
 ![readme](images/readme.pic.jpg)
 
