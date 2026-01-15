@@ -7,7 +7,8 @@
 谁敢黑进来谁先死个妈<br/>
 谁敢抄袭谁就死个妈
 </h2>
-![readme](https://github.com/SCUTcoder/IEMS5718-shop/blob/938b6665dc94704c22ac0fdf876512f5e326041a/images/readme.pic.jpg)
+![readme](https://raw.githubusercontent.com/SCUTcoder/IEMS5718-shop/938b6665dc94704c22ac0fdf876512f5e326041a/images/readme.pic.jpg)
+
 
 <h2 style="color:green;">
 ✔️ 产权由章程个人所有
