@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IEMS5718 Shop - Products</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/script.js" defer></script>
 </head>
 <body>
     <header>
@@ -15,29 +16,93 @@
                 <li><a href="product.html">Products</a></li>
             </ul>
         </nav>
+        <nav class="breadcrumb">
+            <a href="index.html">Home</a> &gt; <a href="product.html">Electronics</a> &gt; <span>Gaming Laptop</span>
+        </nav>
+        <div class="cart-container">
+            <div class="cart-icon">
+                🛒 <span class="cart-count">0</span>
+            </div>
+            <div class="cart-dropdown">
+                <h3>Shopping Cart</h3>
+                <div class="cart-items">
+                    <p class="empty-cart">Your cart is empty</p>
+                </div>
+                <button class="btn checkout-btn" disabled>Checkout</button>
+            </div>
+        </div>
     </header>
 
     <main>
-        <section class="products">
-            <h2>Our Products</h2>
-            <div class="product-grid">
-                <div class="product-card">
-                    <h3>Product 1</h3>
-                    <p>Description of Product 1</p>
-                    <span class="price">$29.99</span>
-                    <button class="btn">Add to Cart</button>
+        <section class="product-detail">
+            <div class="product-gallery">
+                <div class="main-image">
+                    <img src="images/product1.jpg" alt="Gaming Laptop" id="main-product-image">
                 </div>
-                <div class="product-card">
-                    <h3>Product 2</h3>
-                    <p>Description of Product 2</p>
-                    <span class="price">$39.99</span>
-                    <button class="btn">Add to Cart</button>
+                <div class="thumbnail-gallery">
+                    <img src="images/product1.jpg" alt="Gaming Laptop View 1" class="thumbnail active" data-image="images/product1.jpg">
+                    <img src="images/product1-2.jpg" alt="Gaming Laptop View 2" class="thumbnail" data-image="images/product1-2.jpg">
+                    <img src="images/product1-3.jpg" alt="Gaming Laptop View 3" class="thumbnail" data-image="images/product1-3.jpg">
+                    <img src="images/product1-4.jpg" alt="Gaming Laptop View 4" class="thumbnail" data-image="images/product1-4.jpg">
                 </div>
-                <div class="product-card">
-                    <h3>Product 3</h3>
-                    <p>Description of Product 3</p>
-                    <span class="price">$19.99</span>
-                    <button class="btn">Add to Cart</button>
+            </div>
+
+            <div class="product-info">
+                <h1>Gaming Laptop</h1>
+                <div class="price">$1,299.99</div>
+                <div class="rating">
+                    ⭐⭐⭐⭐⭐ (4.8/5) - 127 reviews
+                </div>
+
+                <div class="description">
+                    <h3>Description</h3>
+                    <p>Experience gaming like never before with our high-performance gaming laptop. Featuring the latest Intel Core i7 processor, NVIDIA RTX 4070 graphics card, and 16GB DDR5 RAM, this powerhouse delivers exceptional performance for gaming, content creation, and multitasking.</p>
+
+                    <h4>Key Features:</h4>
+                    <ul>
+                        <li>15.6" FHD 165Hz display</li>
+                        <li>Intel Core i7-12700H processor</li>
+                        <li>NVIDIA GeForce RTX 4070 8GB</li>
+                        <li>16GB DDR5 RAM (upgradable to 64GB)</li>
+                        <li>1TB NVMe SSD</li>
+                        <li>RGB backlit keyboard</li>
+                        <li>Windows 11 Pro</li>
+                    </ul>
+                </div>
+
+                <div class="specifications">
+                    <h3>Specifications</h3>
+                    <table>
+                        <tr>
+                            <td><strong>Processor:</strong></td>
+                            <td>Intel Core i7-12700H</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Graphics:</strong></td>
+                            <td>NVIDIA GeForce RTX 4070 8GB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Memory:</strong></td>
+                            <td>16GB DDR5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Storage:</strong></td>
+                            <td>1TB NVMe SSD</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Display:</strong></td>
+                            <td>15.6" FHD 165Hz</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Operating System:</strong></td>
+                            <td>Windows 11 Pro</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="add-to-cart-section">
+                    <button class="btn add-to-cart" data-product-id="1">Add to Cart</button>
+                    <button class="btn buy-now">Buy Now</button>
                 </div>
             </div>
         </section>
