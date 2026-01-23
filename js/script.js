@@ -166,42 +166,17 @@ function updateCartDisplay() {
 function showNotification(message) {
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = 'notification';
+    notification.className = 'notification slide-in';
     notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background-color: #27ae60;
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 4px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        z-index: 10000;
-        animation: slideIn 0.3s ease-out;
-    `;
 
     document.body.appendChild(notification);
 
     // Remove after 3 seconds
     setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-out';
+        notification.classList.remove('slide-in');
+        notification.classList.add('slide-out');
         setTimeout(() => {
             document.body.removeChild(notification);
         }, 300);
     }, 3000);
 }
-
-// Add CSS animations for notifications
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
