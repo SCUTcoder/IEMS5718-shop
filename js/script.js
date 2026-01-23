@@ -1,11 +1,25 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+// 动态获取API地址：开发环境用8080，生产环境用当前域名/api
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:8080/api' 
+    : window.location.origin + '/api';
+
 let productsData = {};
+let cart = [];
+
+console.log('API Base URL:', API_BASE_URL);
 
 document.addEventListener('DOMContentLoaded', async function() {
     await loadProducts();
     
-    let cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
+    cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
     updateCartDisplay();
+
+    if (window.location.pathname.includes('product.html')) {
+        console.log('Product page detected, loading detail...');
+        setTimeout(() => {
+            loadProductDetail();
+        }, 100);
+    }
 
     document.querySelectorAll('.add-to-cart').forEach(button => {
         button.addEventListener('click', function() {
@@ -46,40 +60,160 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 async function loadProducts() {
+    productsData = {
+        '1': { 
+            id: 1, 
+            name: 'Gaming Laptop', 
+            price: 1299.99, 
+            imageUrl: 'images/product1.jpg',
+            thumbnailUrls: 'images/product1.jpg,images/product1-2.jpg,images/product1-3.jpg,images/product1-4.jpg',
+            description: 'Experience gaming like never before with our high-performance gaming laptop. Featuring the latest Intel Core i7 processor, NVIDIA RTX 4070 graphics card, and 16GB DDR5 RAM, this powerhouse delivers exceptional performance for gaming, content creation, and multitasking.',
+            category: 'Electronics'
+        },
+        '2': { 
+            id: 2, 
+            name: 'Wireless Headphones', 
+            price: 249.99, 
+            imageUrl: 'images/product2.jpg',
+            thumbnailUrls: 'images/product2.jpg',
+            description: 'Premium wireless headphones with noise cancellation. Immerse yourself in crystal-clear audio with advanced active noise cancellation technology. Perfect for music lovers, commuters, and professionals.',
+            category: 'Electronics'
+        },
+        '3': { 
+            id: 3, 
+            name: 'Smart Watch', 
+            price: 399.99, 
+            imageUrl: 'images/product3.jpg',
+            thumbnailUrls: 'images/product3.jpg',
+            description: 'Latest smartwatch with health monitoring features. Track your fitness goals, monitor your heart rate, sleep patterns, and stay connected with notifications. Water-resistant design perfect for any lifestyle.',
+            category: 'Electronics'
+        },
+        '4': { 
+            id: 4, 
+            name: 'Tablet PC', 
+            price: 599.99, 
+            imageUrl: 'images/product4.jpg',
+            thumbnailUrls: 'images/product4.jpg',
+            description: 'Portable tablet perfect for work and entertainment. Featuring a stunning high-resolution display, powerful processor, and all-day battery life. Whether you\'re working, studying, or relaxing, this tablet adapts to your needs.',
+            category: 'Electronics'
+        }
+    };
+    
+    console.log('✅ Local products data initialized');
+
     try {
         const response = await fetch(`${API_BASE_URL}/products`);
         if (!response.ok) throw new Error('Failed to fetch products');
         
         const products = await response.json();
+        productsData = {};
         products.forEach(product => {
-            productsData[product.id.toString()] = {
-                id: product.id.toString(),
-                name: product.name,
-                price: product.price,
-                image: product.imageUrl
-            };
+            productsData[product.id.toString()] = product;
         });
-        console.log('✅ Products loaded:', products.length);
+        console.log('✅ Products updated from backend:', products.length);
     } catch (error) {
-        console.error('⚠️  Using fallback data:', error);
-        productsData = {
-            '1': { id: '1', name: 'Gaming Laptop', price: 1299.99, image: 'images/product1.jpg' },
-            '2': { id: '2', name: 'Wireless Headphones', price: 249.99, image: 'images/product2.jpg' },
-            '3': { id: '3', name: 'Smart Watch', price: 399.99, image: 'images/product3.jpg' },
-            '4': { id: '4', name: 'Tablet PC', price: 599.99, image: 'images/product4.jpg' }
-        };
+        console.log('ℹ️  Using local data (backend not available):', error.message);
     }
 }
 
-function addToCart(productId) {
+function loadProductDetail() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+    
+    console.log('Loading product detail for ID:', productId);
+    console.log('Available products:', Object.keys(productsData));
+    console.log('Full productsData:', productsData);
+    
+    if (!productId) {
+        document.getElementById('product-detail').innerHTML = '<div style="text-align: center; padding: 50px;"><p>Product not found - No ID provided</p></div>';
+        return;
+    }
+
     const product = productsData[productId];
+    if (!product) {
+        console.error('Product not found in productsData for ID:', productId);
+        console.error('Trying to access productsData["' + productId + '"]');
+        document.getElementById('product-detail').innerHTML = '<div style="text-align: center; padding: 50px;"><p>Product not found - ID: ' + productId + '</p><p>Available IDs: ' + Object.keys(productsData).join(', ') + '</p></div>';
+        return;
+    }
+    
+    console.log('Found product:', product);
+
+    const thumbnails = product.thumbnailUrls ? product.thumbnailUrls.split(',') : [product.imageUrl];
+    const breadcrumb = document.getElementById('breadcrumb');
+    if (breadcrumb) {
+        breadcrumb.innerHTML = `<a href="index.html">Home</a> &gt; <a href="#">${product.category}</a> &gt; <span>${product.name}</span>`;
+    }
+
+    document.title = `${product.name} - IEMS5718 Shop`;
+
+    const detailHTML = `
+        <div class="product-gallery">
+            <div class="main-image">
+                <img src="${thumbnails[0]}" alt="${product.name}" id="main-product-image">
+            </div>
+            <div class="thumbnail-gallery">
+                ${thumbnails.map((img, index) => `
+                    <img src="${img}" alt="${product.name} View ${index + 1}" 
+                         class="thumbnail ${index === 0 ? 'active' : ''}" 
+                         data-image="${img}">
+                `).join('')}
+            </div>
+        </div>
+        <div class="product-info">
+            <h1>${product.name}</h1>
+            <div class="price">$${product.price.toFixed(2)}</div>
+            <div class="description">
+                <h3>Description</h3>
+                <p>${product.description}</p>
+            </div>
+            <div class="add-to-cart-section">
+                <button class="btn add-to-cart" data-product-id="${product.id}">Add to Cart</button>
+                <button class="btn buy-now">Buy Now</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('product-detail').innerHTML = detailHTML;
+
+    document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+        thumbnail.addEventListener('click', function() {
+            const mainImage = document.getElementById('main-product-image');
+            if (mainImage) {
+                mainImage.src = this.getAttribute('data-image');
+                document.querySelectorAll('.thumbnail').forEach(thumb => {
+                    thumb.classList.remove('active');
+                });
+                this.classList.add('active');
+            }
+        });
+    });
+
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            addToCart(productId);
+        });
+    });
+}
+
+function addToCart(productId) {
+    const product = productsData[productId.toString()];
     if (!product) return;
 
-    const existingItem = cart.find(item => item.id === productId);
+    const cartItem = {
+        id: product.id.toString(),
+        name: product.name,
+        price: product.price,
+        image: product.imageUrl,
+        quantity: 1
+    };
+
+    const existingItem = cart.find(item => item.id === cartItem.id);
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        cart.push({ ...product, quantity: 1 });
+        cart.push(cartItem);
     }
 
     localStorage.setItem('iems5718-cart', JSON.stringify(cart));

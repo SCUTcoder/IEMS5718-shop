@@ -12,7 +12,7 @@
         <nav>
             <ul>
                 <li><a href="index-dynamic.html">Home</a></li>
-                <li><a href="product-dynamic.html">Products</a></li>
+                <li><a href="product.html">Products</a></li>
             </ul>
         </nav>
         <nav class="breadcrumb">
@@ -54,8 +54,12 @@
     </footer>
 
     <script>
-        // API Configuration
-        const API_BASE_URL = 'http://localhost:8080/api';
+        // 动态获取API地址：开发环境用8080，生产环境用当前域名/api
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:8080/api' 
+            : window.location.origin + '/api';
+        
+        console.log('API Base URL:', API_BASE_URL);
         
         // Cart functionality
         let cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
@@ -120,10 +124,10 @@
             card.className = 'product-card';
             
             card.innerHTML = `
-                <a href="product-dynamic.html?id=${product.id}">
+                <a href="product.html?id=${product.id}">
                     <img src="${product.imageUrl}" alt="${product.name}" class="product-image">
                 </a>
-                <h3><a href="product-dynamic.html?id=${product.id}">${product.name}</a></h3>
+                <h3><a href="product.html?id=${product.id}">${product.name}</a></h3>
                 <p>${product.description}</p>
                 <span class="price">$${product.price.toFixed(2)}</span>
                 <button class="btn add-to-cart" data-product-id="${product.id}">Add to Cart</button>

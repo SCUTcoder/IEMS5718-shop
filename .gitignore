@@ -1,0 +1,24 @@
+# README - 个人信息
+README.md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# PDF 文件（作业要求文档）
+*.pdf
