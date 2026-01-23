@@ -1,0 +1,24 @@
+[Unit]
+Description=IEMS5718 Shop Backend Service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/app/IEMS5718-shop/backend
+ExecStart=/usr/bin/java -jar /opt/app/IEMS5718-shop/backend/target/shop-backend-1.0.0.jar
+Restart=always
+RestartSec=10
+
+# 日志配置
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=iems5718-shop
+
+# 安全配置
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
