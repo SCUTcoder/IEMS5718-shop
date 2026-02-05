@@ -248,6 +248,8 @@ function updateCartDisplay() {
     if (!cartCount || !cartItems || !checkoutBtn) return;
 
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
     cartCount.textContent = totalItems;
 
     if (cart.length === 0) {
@@ -259,13 +261,17 @@ function updateCartDisplay() {
                 <img src="${item.image}" alt="${item.name}">
                 <div class="cart-item-details">
                     <h4>${item.name}</h4>
-                    <span class="cart-item-price">$${item.price}</span>
+                    <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
                     <input type="number" class="cart-item-quantity" value="${item.quantity}"
                            min="1" data-product-id="${item.id}">
                 </div>
                 <button class="cart-item-remove" data-product-id="${item.id}">×</button>
             </div>
-        `).join('');
+        `).join('') + `
+            <div class="cart-total">
+                <strong>Total: $${totalAmount.toFixed(2)}</strong>
+            </div>
+        `;
 
         checkoutBtn.disabled = false;
 

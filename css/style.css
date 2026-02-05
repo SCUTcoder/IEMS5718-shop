@@ -166,6 +166,15 @@ nav a:hover {
     margin-left: 0.5rem;
 }
 
+.cart-total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid #ddd;
+    text-align: right;
+    font-size: 1.2rem;
+    color: #333;
+}
+
 .checkout-btn {
     width: calc(100% - 2rem);
     margin: 1rem;

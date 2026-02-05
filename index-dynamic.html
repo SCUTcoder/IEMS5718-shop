@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>章程's Shop - Home (Dynamic)</title>
+    <title>章程's Shop - Home Page</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -106,7 +106,7 @@
                 
             } catch (error) {
                 console.error('Error loading products:', error);
-                apiStatus.innerHTML = '<p class="error">⚠️  Backend API not available. Showing demo data.</p>';
+                apiStatus.innerHTML = '<p class="error"> Backend API not available. Showing demo data.</p>';
                 apiStatus.style.padding = '10px';
                 apiStatus.style.backgroundColor = '#f8d7da';
                 apiStatus.style.border = '1px solid #f5c6cb';
@@ -199,6 +199,8 @@
             if (!cartCount || !cartItems || !checkoutBtn) return;
             
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
             cartCount.textContent = totalItems;
             
             if (cart.length === 0) {
@@ -210,13 +212,17 @@
                         <img src="${item.image}" alt="${item.name}">
                         <div class="cart-item-details">
                             <h4>${item.name}</h4>
-                            <span class="cart-item-price">$${item.price}</span>
+                            <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
                             <input type="number" class="cart-item-quantity" value="${item.quantity}"
                                    min="1" data-product-id="${item.id}">
                         </div>
                         <button class="cart-item-remove" data-product-id="${item.id}">×</button>
                     </div>
-                `).join('');
+                `).join('') + `
+                    <div class="cart-total">
+                        <strong>Total: $${totalAmount.toFixed(2)}</strong>
+                    </div>
+                `;
                 
                 checkoutBtn.disabled = false;
                 

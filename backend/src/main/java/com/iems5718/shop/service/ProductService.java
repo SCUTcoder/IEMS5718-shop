@@ -6,6 +6,7 @@ import com.iems5718.shop.repository.CategoryRepository;
 import com.iems5718.shop.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,9 @@ public class ProductService {
     
     @Autowired
     private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private ImageService imageService;
     
     public List<Product> getAllProducts() {
         return productRepository.findByActiveTrue();
@@ -72,5 +76,63 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         product.setActive(false);
         productRepository.save(product);
+    }
+    
+    public Product createProductWithImage(Long catid, String name, Double price, String description, 
+                                         Integer stockQuantity, MultipartFile image) throws Exception {
+        // Create product
+        Category category = categoryRepository.findById(catid)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        
+        Product product = new Product();
+        product.setCategory(category);
+        product.setName(name);
+        product.setPrice(price);
+        product.setDescription(description);
+        product.setStockQuantity(stockQuantity);
+        product.setActive(true);
+        
+        // Save product first to get ID
+        product = productRepository.save(product);
+        
+        // Upload image if provided
+        if (image != null && !image.isEmpty()) {
+            String[] imagePaths = imageService.uploadProductImage(image, product.getPid());
+            product.setImageUrl(imagePaths[0]);
+            product.setThumbnailUrls(imagePaths[1]);
+            product = productRepository.save(product);
+        }
+        
+        return product;
+    }
+    
+    public Product updateProductWithImage(Long id, Long catid, String name, Double price, 
+                                         String description, Integer stockQuantity, MultipartFile image) throws Exception {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        
+        // Update fields if provided
+        if (catid != null) {
+            Category category = categoryRepository.findById(catid)
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            product.setCategory(category);
+        }
+        if (name != null) product.setName(name);
+        if (price != null) product.setPrice(price);
+        if (description != null) product.setDescription(description);
+        if (stockQuantity != null) product.setStockQuantity(stockQuantity);
+        
+        // Upload new image if provided
+        if (image != null && !image.isEmpty()) {
+            // Delete old images
+            imageService.deleteProductImages(product.getImageUrl(), product.getThumbnailUrls());
+            
+            // Upload new image
+            String[] imagePaths = imageService.uploadProductImage(image, product.getPid());
+            product.setImageUrl(imagePaths[0]);
+            product.setThumbnailUrls(imagePaths[1]);
+        }
+        
+        return productRepository.save(product);
     }
 }
