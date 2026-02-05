@@ -1,5 +1,6 @@
 package com.iems5718.shop.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,25 +15,28 @@ public class Product {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "pid")
+    private Long pid;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "catid", nullable = false)
+    @JsonIgnoreProperties("products")
+    private Category category;
     
     @Column(nullable = false)
     private String name;
     
-    @Column(length = 1000)
-    private String description;
-    
     @Column(nullable = false)
     private Double price;
+    
+    @Column(length = 1000)
+    private String description;
     
     @Column(name = "image_url")
     private String imageUrl;
     
     @Column(name = "thumbnail_urls", length = 1000)
     private String thumbnailUrls;
-    
-    @Column(nullable = false)
-    private String category;
     
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
