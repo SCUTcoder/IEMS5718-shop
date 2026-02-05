@@ -90,9 +90,9 @@
                 // Clear loading message
                 productGrid.innerHTML = '';
                 
-                // Store products data
+                // Store products data (use pid as key)
                 products.forEach(product => {
-                    productsData[product.id] = product;
+                    productsData[product.pid] = product;
                 });
                 
                 // Render products
@@ -123,14 +123,17 @@
             const card = document.createElement('div');
             card.className = 'product-card';
             
+            // Use pid for product ID
+            const productId = product.pid || product.id;
+            
             card.innerHTML = `
-                <a href="product.html?id=${product.id}">
+                <a href="product.html?id=${productId}">
                     <img src="${product.imageUrl}" alt="${product.name}" class="product-image">
                 </a>
-                <h3><a href="product.html?id=${product.id}">${product.name}</a></h3>
+                <h3><a href="product.html?id=${productId}">${product.name}</a></h3>
                 <p>${product.description}</p>
                 <span class="price">$${product.price.toFixed(2)}</span>
-                <button class="btn add-to-cart" data-product-id="${product.id}">Add to Cart</button>
+                <button class="btn add-to-cart" data-product-id="${productId}">Add to Cart</button>
             `;
             
             return card;
@@ -170,14 +173,20 @@
         // Add to cart function
         function addToCart(productId) {
             const product = productsData[productId];
-            if (!product) return;
+            if (!product) {
+                console.error('Product not found:', productId, 'Available products:', Object.keys(productsData));
+                return;
+            }
             
-            const existingItem = cart.find(item => item.id === productId);
+            // Use pid as product ID in cart
+            const cartProductId = product.pid || product.id;
+            
+            const existingItem = cart.find(item => item.id === cartProductId);
             if (existingItem) {
                 existingItem.quantity += 1;
             } else {
                 cart.push({
-                    id: productId,
+                    id: cartProductId,
                     name: product.name,
                     price: product.price,
                     image: product.imageUrl,

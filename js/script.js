@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function loadProducts() {
     productsData = {
         '1': { 
-            id: 1, 
+            id: 1,
+            pid: 1,
             name: 'Gaming Laptop', 
             price: 1299.99, 
             imageUrl: 'images/product1.jpg',
@@ -71,7 +72,8 @@ async function loadProducts() {
             category: 'Electronics'
         },
         '2': { 
-            id: 2, 
+            id: 2,
+            pid: 2,
             name: 'Wireless Headphones', 
             price: 249.99, 
             imageUrl: 'images/product2.jpg',
@@ -80,7 +82,8 @@ async function loadProducts() {
             category: 'Electronics'
         },
         '3': { 
-            id: 3, 
+            id: 3,
+            pid: 3,
             name: 'Smart Watch', 
             price: 399.99, 
             imageUrl: 'images/product3.jpg',
@@ -89,7 +92,8 @@ async function loadProducts() {
             category: 'Electronics'
         },
         '4': { 
-            id: 4, 
+            id: 4,
+            pid: 4,
             name: 'Tablet PC', 
             price: 599.99, 
             imageUrl: 'images/product4.jpg',
@@ -108,7 +112,9 @@ async function loadProducts() {
         const products = await response.json();
         productsData = {};
         products.forEach(product => {
-            productsData[product.id.toString()] = product;
+            // Use pid as key (backend returns pid, not id)
+            const productId = product.pid || product.id;
+            productsData[productId.toString()] = product;
         });
         console.log('✅ Products updated from backend:', products.length);
     } catch (error) {
@@ -199,10 +205,16 @@ function loadProductDetail() {
 
 function addToCart(productId) {
     const product = productsData[productId.toString()];
-    if (!product) return;
+    if (!product) {
+        console.error('Product not found:', productId, 'Available:', Object.keys(productsData));
+        return;
+    }
+
+    // Use pid or id as product identifier
+    const cartProductId = (product.pid || product.id).toString();
 
     const cartItem = {
-        id: product.id.toString(),
+        id: cartProductId,
         name: product.name,
         price: product.price,
         image: product.imageUrl,
