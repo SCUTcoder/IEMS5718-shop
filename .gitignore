@@ -22,3 +22,9 @@ README.md
 
 # PDF 文件（作业要求文档）
 *.pdf
+
+# 本地开发脚本
+start-local.sh
+stop-local.sh
+backend.log
+frontend.log
