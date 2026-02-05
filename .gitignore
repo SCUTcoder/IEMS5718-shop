@@ -25,9 +25,12 @@ README.md
 
 # 本地开发脚本
 start-local.sh
+start-debug.sh
 stop-local.sh
 backend.log
+backend-debug.log
 frontend.log
+frontend-debug.log
 
 # 数据库备份文件
 backend/shop.db.old.backup
