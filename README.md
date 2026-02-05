@@ -80,7 +80,7 @@ sqlite3 shop.db < src/main/resources/database-init.sql
 ### Frontend
 
 Open in browser:
-- Main shop: `index-dynamic.html`
+- Main shop: `index.html`
 - Admin panel: `admin.html`
 - Product details: `product.html?id=1`
 
