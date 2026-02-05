@@ -28,3 +28,8 @@ start-local.sh
 stop-local.sh
 backend.log
 frontend.log
+
+# 数据库备份文件
+backend/shop.db.old.backup
+backend/shop.db.backup.*
+backend/*.backup
