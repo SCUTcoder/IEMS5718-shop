@@ -83,14 +83,6 @@
                 
                 const products = await response.json();
                 
-                // Show success message
-                apiStatus.innerHTML = '<p class="success">✅ Connected to backend API</p>';
-                apiStatus.style.padding = '10px';
-                apiStatus.style.backgroundColor = '#d4edda';
-                apiStatus.style.border = '1px solid #c3e6cb';
-                apiStatus.style.borderRadius = '5px';
-                apiStatus.style.marginBottom = '20px';
-                
                 // Clear loading message
                 productGrid.innerHTML = '';
                 
