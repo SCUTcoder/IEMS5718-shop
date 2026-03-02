@@ -1,52 +1,109 @@
 // API Base URL
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:8080/api' 
+const API_BASE_URL = (window.location.protocol === 'file:' ||
+                     window.location.hostname === 'localhost' ||
+                     window.location.hostname === '127.0.0.1' ||
+                     window.location.hostname === '')
+    ? 'http://localhost:8080/api'
     : window.location.origin + '/api';
 
 let categories = [];
 let products = [];
+let selectedImageFile = null;
 
-// Initialize
 document.addEventListener('DOMContentLoaded', function() {
     loadCategories();
     loadProducts();
-    
-    // Section navigation
-    document.querySelectorAll('.admin-nav button').forEach(button => {
+
+    document.querySelectorAll('.admin-tab').forEach(button => {
         button.addEventListener('click', function() {
-            const section = this.getAttribute('data-section');
-            switchSection(section);
+            switchSection(this.getAttribute('data-section'));
         });
     });
-    
-    // Image preview
-    document.getElementById('product-image').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('image-preview');
-                preview.src = e.target.result;
-                preview.classList.add('show');
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    // Form submissions
+
+    initImageUpload();
+
     document.getElementById('product-form').addEventListener('submit', handleProductSubmit);
     document.getElementById('category-form').addEventListener('submit', handleCategorySubmit);
 });
 
+function initImageUpload() {
+    const zone = document.getElementById('image-upload-zone');
+    const fileInput = document.getElementById('product-image');
+    const previewWrap = document.getElementById('image-preview-wrap');
+    const preview = document.getElementById('image-preview');
+    const removeBtn = document.getElementById('image-remove-btn');
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files[0]) setImageFile(e.target.files[0]);
+    });
+
+    removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearImageSelection();
+    });
+
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) setImageFile(file);
+    });
+
+    document.addEventListener('paste', (e) => {
+        const productSection = document.getElementById('products-section');
+        if (!productSection.classList.contains('active')) return;
+
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                setImageFile(item.getAsFile());
+                return;
+            }
+        }
+    });
+}
+
+function setImageFile(file) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+        showNotification('Image exceeds 10MB limit', 'error');
+        return;
+    }
+    selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const zone = document.getElementById('image-upload-zone');
+        const previewWrap = document.getElementById('image-preview-wrap');
+        document.getElementById('image-preview').src = e.target.result;
+        previewWrap.classList.add('show');
+        zone.classList.add('has-image');
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearImageSelection() {
+    selectedImageFile = null;
+    const zone = document.getElementById('image-upload-zone');
+    const previewWrap = document.getElementById('image-preview-wrap');
+    document.getElementById('product-image').value = '';
+    document.getElementById('image-preview').src = '';
+    previewWrap.classList.remove('show');
+    zone.classList.remove('has-image');
+}
+
 function switchSection(section) {
-    document.querySelectorAll('.admin-nav button').forEach(btn => {
+    document.querySelectorAll('.admin-tab').forEach(btn => {
         btn.classList.remove('active');
     });
     document.querySelectorAll('.admin-section').forEach(sec => {
         sec.classList.remove('active');
     });
     
-    document.querySelector(`[data-section="${section}"]`).classList.add('active');
+    document.querySelector(`.admin-tab[data-section="${section}"]`).classList.add('active');
     document.getElementById(`${section}-section`).classList.add('active');
 }
 
@@ -209,7 +266,7 @@ async function handleProductSubmit(e) {
     const price = parseFloat(document.getElementById('product-price').value);
     const description = document.getElementById('product-description').value;
     const stockQuantity = parseInt(document.getElementById('product-stock').value) || 0;
-    const imageFile = document.getElementById('product-image').files[0];
+    const imageFile = selectedImageFile || document.getElementById('product-image').files[0];
     
     try {
         let response;
@@ -289,14 +346,16 @@ function editProduct(id) {
         document.getElementById('product-price').value = product.price;
         document.getElementById('product-description').value = product.description;
         document.getElementById('product-stock').value = product.stockQuantity || 0;
-        
-        // Preview existing image if available
+
+        clearImageSelection();
         if (product.imageUrl) {
-            const preview = document.getElementById('image-preview');
-            preview.src = product.imageUrl;
-            preview.classList.add('show');
+            const zone = document.getElementById('image-upload-zone');
+            const previewWrap = document.getElementById('image-preview-wrap');
+            document.getElementById('image-preview').src = product.imageUrl;
+            previewWrap.classList.add('show');
+            zone.classList.add('has-image');
         }
-        
+
         switchSection('products');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -323,7 +382,7 @@ async function deleteProduct(id) {
 function resetProductForm() {
     document.getElementById('product-form').reset();
     document.getElementById('product-id').value = '';
-    document.getElementById('image-preview').classList.remove('show');
+    clearImageSelection();
 }
 
 // Utility functions

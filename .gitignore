@@ -35,3 +35,7 @@ logs/
 backend/shop.db.old.backup
 backend/shop.db.backup.*
 backend/*.backup
+
+# 上传的产品图片
+images/products/
+backend/images/

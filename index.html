@@ -3,307 +3,439 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>章程's Shop - Home Page</title>
+    <title>章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Welcome to 章程's Shop</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="product.html">Products</a></li>
+
+    <header class="header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">章程's Shop</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
             </ul>
-        </nav>
-        <nav class="breadcrumb">
-            <span>Home</span>
-        </nav>
-        <div class="cart-container">
-            <div class="cart-icon">
-                🛒 <span class="cart-count">0</span>
-            </div>
-            <div class="cart-dropdown">
-                <h3>Shopping Cart</h3>
-                <div class="cart-items">
-                    <p class="empty-cart">Your cart is empty</p>
+            <div class="cart-container">
+                <div class="cart-icon" id="cart-toggle">
+                    🛒 <span class="cart-count" id="cart-count">0</span>
                 </div>
-                <button class="btn checkout-btn" disabled>Checkout</button>
+                <div class="cart-dropdown">
+                    <div class="cart-dropdown-header">Shopping Cart</div>
+                    <div class="cart-items" id="cart-items">
+                        <p class="empty-cart">Your cart is empty</p>
+                    </div>
+                    <div class="cart-dropdown-footer">
+                        <button class="checkout-btn" id="checkout-btn" disabled>Checkout</button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
-    <main>
-        <section class="hero">
-            <h2>Your One-Stop Shop for Everything</h2>
-            <p>Discover amazing products at great prices!</p>
-            <a href="#products" class="btn">Shop Now</a>
-        </section>
+    <section class="hero">
+        <h2>Discover Premium Products</h2>
+        <p>Curated collection of quality products at great prices</p>
+        <a href="#products" class="hero-btn">Shop Now</a>
+    </section>
 
-        <section id="products" class="products">
-            <h2>Featured Products</h2>
-            <div id="api-status" class="api-status"></div>
-            <div class="product-grid" id="product-grid">
-                <!-- Products will be loaded dynamically from backend -->
-                <p class="loading">Loading products...</p>
-            </div>
-        </section>
-    </main>
+    <div id="api-status" class="api-status"></div>
+
+    <div class="section-header" id="products">
+        <h2>Products</h2>
+    </div>
+
+    <div class="filter-bar">
+        <div class="category-filter" id="category-filter">
+            <button class="category-pill active" data-catid="all">All</button>
+        </div>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-input" placeholder="Search products..." autocomplete="off">
+            <button class="search-clear" id="search-clear" style="display:none">×</button>
+        </div>
+    </div>
+
+    <section class="products">
+        <div class="product-grid" id="product-grid">
+            <div class="skeleton-card"><div class="skeleton-image"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-image"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-image"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-image"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+        </div>
+    </section>
 
     <footer>
-        <p>&copy; 2024 IEMS5718 Shop. All rights reserved.</p>
+        <p>&copy; 2025 IEMS5718 Shop by 章程. All rights reserved.</p>
     </footer>
 
     <script>
-        // 动态获取API地址：开发环境用8080，生产环境用当前域名/api
-        // 修复：file:// 协议时也使用 localhost:8080
-        const API_BASE_URL = (window.location.protocol === 'file:' || 
-                             window.location.hostname === 'localhost' || 
-                             window.location.hostname === '127.0.0.1' || 
-                             window.location.hostname === '')
-            ? 'http://localhost:8080/api' 
-            : window.location.origin + '/api';
-        
-        console.log('API Base URL:', API_BASE_URL);
-        
-        // Cart functionality
-        let cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
-        let productsData = {};
+    const API_BASE_URL = (window.location.protocol === 'file:' ||
+                         window.location.hostname === 'localhost' ||
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname === '')
+        ? 'http://localhost:8080/api'
+        : window.location.origin + '/api';
 
-        // Load products from backend
-        async function loadProducts() {
-            const productGrid = document.getElementById('product-grid');
-            const apiStatus = document.getElementById('api-status');
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/products`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const products = await response.json();
-                
-                // Clear loading message
-                productGrid.innerHTML = '';
-                
-                // Store products data (use pid as key)
-                products.forEach(product => {
-                    productsData[product.pid] = product;
-                });
-                
-                // Render products
-                products.forEach(product => {
-                    const productCard = createProductCard(product);
-                    productGrid.appendChild(productCard);
-                });
-                
-                // Initialize cart buttons
-                initializeCartButtons();
-                
-            } catch (error) {
-                console.error('Error loading products:', error);
-                apiStatus.innerHTML = '<p class="error"> Backend API not available. Showing demo data.</p>';
-                apiStatus.style.padding = '10px';
-                apiStatus.style.backgroundColor = '#f8d7da';
-                apiStatus.style.border = '1px solid #f5c6cb';
-                apiStatus.style.borderRadius = '5px';
-                apiStatus.style.marginBottom = '20px';
-                
-                // Load fallback products
-                loadFallbackProducts();
-            }
-        }
+    let cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
+    let productsData = {};
+    let allProducts = [];
+    let categories = [];
+    let activeCategory = 'all';
+    let searchQuery = '';
 
-        // Create product card HTML
-        function createProductCard(product) {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            
-            // Use pid for product ID
-            const productId = product.pid || product.id;
-            
-            card.innerHTML = `
-                <a href="product.html?id=${productId}">
-                    <img src="${product.imageUrl}" alt="${product.name}" class="product-image">
-                </a>
-                <h3><a href="product.html?id=${productId}">${product.name}</a></h3>
-                <p>${product.description}</p>
-                <span class="price">$${product.price.toFixed(2)}</span>
-                <button class="btn add-to-cart" data-product-id="${productId}">Add to Cart</button>
-            `;
-            
-            return card;
-        }
+    // ==================== Init ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+        await Promise.all([loadCategories(), loadProducts()]);
+        updateCartDisplay();
+        initCartToggle();
+        initSearch();
+    });
 
-        // Load fallback products if backend is unavailable
-        function loadFallbackProducts() {
-            const productGrid = document.getElementById('product-grid');
-            productGrid.innerHTML = '';
-            
-            const fallbackProducts = [
-                { id: 1, name: 'Gaming Laptop', description: 'High-performance gaming laptop with latest specs', price: 1299.99, imageUrl: 'images/product1.jpg' },
-                { id: 2, name: 'Wireless Headphones', description: 'Premium wireless headphones with noise cancellation', price: 249.99, imageUrl: 'images/product2.jpg' },
-                { id: 3, name: 'Smart Watch', description: 'Latest smartwatch with health monitoring features', price: 399.99, imageUrl: 'images/product3.jpg' },
-                { id: 4, name: 'Tablet PC', description: 'Portable tablet perfect for work and entertainment', price: 599.99, imageUrl: 'images/product4.jpg' }
+    // ==================== Categories ====================
+    async function loadCategories() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/categories`);
+            if (!res.ok) throw new Error('Failed');
+            categories = await res.json();
+            renderCategoryFilter();
+        } catch (e) {
+            categories = [
+                { catid: 1, name: 'Electronics' },
+                { catid: 2, name: 'Clothing' }
             ];
-            
-            fallbackProducts.forEach(product => {
-                productsData[product.id] = product;
-                const card = createProductCard(product);
-                productGrid.appendChild(card);
+            renderCategoryFilter();
+        }
+    }
+
+    function renderCategoryFilter() {
+        const filter = document.getElementById('category-filter');
+        filter.innerHTML = '<button class="category-pill active" data-catid="all">All</button>';
+        categories.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'category-pill';
+            btn.dataset.catid = cat.catid;
+            btn.textContent = cat.name;
+            filter.appendChild(btn);
+        });
+
+        filter.querySelectorAll('.category-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                filter.querySelectorAll('.category-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCategory = btn.dataset.catid;
+                filterProducts();
             });
-            
-            initializeCartButtons();
+        });
+    }
+
+    function filterProducts() {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = '';
+
+        let filtered = activeCategory === 'all'
+            ? allProducts
+            : allProducts.filter(p => {
+                const catid = p.category ? (p.category.catid || p.category) : p.catid;
+                return String(catid) === String(activeCategory);
+            });
+
+        const q = searchQuery.trim().toLowerCase();
+        if (q) {
+            filtered = filtered.filter(p =>
+                (p.name && p.name.toLowerCase().includes(q)) ||
+                (p.description && p.description.toLowerCase().includes(q))
+            );
         }
 
-        // Initialize add to cart buttons
-        function initializeCartButtons() {
-            document.querySelectorAll('.add-to-cart').forEach(button => {
-                button.addEventListener('click', function() {
-                    const productId = parseInt(this.getAttribute('data-product-id'));
-                    addToCart(productId);
-                });
+        // Update result count
+        let countEl = document.getElementById('search-result-count');
+        if (q) {
+            if (!countEl) {
+                countEl = document.createElement('div');
+                countEl.id = 'search-result-count';
+                countEl.className = 'search-result-count';
+                document.querySelector('.products').insertAdjacentElement('beforebegin', countEl);
+            }
+            countEl.innerHTML = `Found <span>${filtered.length}</span> result${filtered.length !== 1 ? 's' : ''} for "${q}"`;
+            countEl.style.display = '';
+        } else if (countEl) {
+            countEl.style.display = 'none';
+        }
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div class="no-results"><div class="no-results-icon">🔍</div><p>${q ? 'No products match "' + q + '"' : 'No products found in this category'}</p></div>`;
+            return;
+        }
+
+        filtered.forEach(product => grid.appendChild(createProductCard(product, q)));
+        initAddToCartButtons();
+    }
+
+    // ==================== Products ====================
+    async function loadProducts() {
+        const grid = document.getElementById('product-grid');
+        const apiStatus = document.getElementById('api-status');
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/products`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            allProducts = await res.json();
+        } catch (e) {
+            apiStatus.classList.add('show');
+            apiStatus.innerHTML = '<p class="error">Backend not available. Showing demo data.</p>';
+            allProducts = [
+                { pid: 1, name: 'Gaming Laptop', description: 'High-performance gaming laptop with latest specs', price: 1299.99, imageUrl: 'images/product1.jpg', category: { catid: 1, name: 'Electronics' } },
+                { pid: 2, name: 'Wireless Headphones', description: 'Premium wireless headphones with noise cancellation', price: 249.99, imageUrl: 'images/product2.jpg', category: { catid: 1, name: 'Electronics' } },
+                { pid: 3, name: 'Smart Watch', description: 'Latest smartwatch with health monitoring features', price: 399.99, imageUrl: 'images/product3.jpg', category: { catid: 1, name: 'Electronics' } },
+                { pid: 4, name: 'Tablet PC', description: 'Portable tablet perfect for work and entertainment', price: 599.99, imageUrl: 'images/product4.jpg', category: { catid: 1, name: 'Electronics' } }
+            ];
+        }
+
+        allProducts.forEach(p => {
+            const id = p.pid || p.id;
+            productsData[id] = p;
+        });
+
+        filterProducts();
+    }
+
+    function createProductCard(product, query) {
+        const id = product.pid || product.id;
+        const catName = product.category ? (product.category.name || product.category) : '';
+        const name = query ? highlightText(product.name, query) : product.name;
+        const desc = query ? highlightText(product.description || '', query) : (product.description || '');
+
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+            <a href="product.html?id=${id}" class="product-card-image">
+                <img src="${product.imageUrl || product.thumbnailUrl || 'images/product1.jpg'}" alt="${product.name}" loading="lazy">
+            </a>
+            <div class="product-card-body">
+                ${catName ? `<div class="product-card-category">${catName}</div>` : ''}
+                <h3><a href="product.html?id=${id}">${name}</a></h3>
+                <p class="product-card-desc">${desc}</p>
+                <div class="product-card-footer">
+                    <span class="price">$${product.price.toFixed(2)}</span>
+                    <button class="add-to-cart-btn" data-product-id="${id}">
+                        <span class="btn-text">Add to Cart</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        return card;
+    }
+
+    function highlightText(text, query) {
+        if (!query || !text) return text;
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="highlight">$1</mark>');
+    }
+
+    function initAddToCartButtons() {
+        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const productId = parseInt(this.dataset.productId);
+                addToCart(productId, this);
+            });
+        });
+    }
+
+    // ==================== Cart ====================
+    function addToCart(productId, buttonEl) {
+        const product = productsData[productId];
+        if (!product) return;
+
+        const cartProductId = product.pid || product.id;
+        const existing = cart.find(item => item.id === cartProductId);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({
+                id: cartProductId,
+                name: product.name,
+                price: product.price,
+                image: product.imageUrl,
+                quantity: 1
             });
         }
 
-        // Add to cart function
-        function addToCart(productId) {
-            const product = productsData[productId];
-            if (!product) {
-                console.error('Product not found:', productId, 'Available products:', Object.keys(productsData));
-                return;
-            }
-            
-            // Use pid as product ID in cart
-            const cartProductId = product.pid || product.id;
-            
-            const existingItem = cart.find(item => item.id === cartProductId);
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    id: cartProductId,
-                    name: product.name,
-                    price: product.price,
-                    image: product.imageUrl,
-                    quantity: 1
-                });
-            }
-            
-            localStorage.setItem('iems5718-cart', JSON.stringify(cart));
-            updateCartDisplay();
-            showNotification(`${product.name} added to cart!`);
-        }
+        localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+        updateCartDisplay();
 
-        // Update cart display
-        function updateCartDisplay() {
-            const cartCount = document.querySelector('.cart-count');
-            const cartItems = document.querySelector('.cart-items');
-            const checkoutBtn = document.querySelector('.checkout-btn');
-            
-            if (!cartCount || !cartItems || !checkoutBtn) return;
-            
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            cartCount.textContent = totalItems;
-            
-            if (cart.length === 0) {
-                cartItems.innerHTML = '<p class="empty-cart">Your cart is empty</p>';
-                checkoutBtn.disabled = true;
-            } else {
-                cartItems.innerHTML = cart.map(item => `
-                    <div class="cart-item">
-                        <img src="${item.image}" alt="${item.name}">
-                        <div class="cart-item-details">
-                            <h4>${item.name}</h4>
-                            <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
-                            <input type="number" class="cart-item-quantity" value="${item.quantity}"
-                                   min="1" data-product-id="${item.id}">
-                        </div>
-                        <button class="cart-item-remove" data-product-id="${item.id}">×</button>
-                    </div>
-                `).join('') + `
-                    <div class="cart-total">
-                        <strong>Total: $${totalAmount.toFixed(2)}</strong>
-                    </div>
-                `;
-                
-                checkoutBtn.disabled = false;
-                
-                document.querySelectorAll('.cart-item-quantity').forEach(input => {
-                    input.addEventListener('change', function() {
-                        updateCartQuantity(parseInt(this.getAttribute('data-product-id')), this.value);
-                    });
-                });
-                
-                document.querySelectorAll('.cart-item-remove').forEach(button => {
-                    button.addEventListener('click', function() {
-                        removeFromCart(parseInt(this.getAttribute('data-product-id')));
-                    });
-                });
-            }
-        }
-
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
-            localStorage.setItem('iems5718-cart', JSON.stringify(cart));
-            updateCartDisplay();
-        }
-
-        function updateCartQuantity(productId, newQuantity) {
-            const item = cart.find(item => item.id === productId);
-            if (item) {
-                item.quantity = parseInt(newQuantity);
-                if (item.quantity <= 0) {
-                    removeFromCart(productId);
-                } else {
-                    localStorage.setItem('iems5718-cart', JSON.stringify(cart));
-                    updateCartDisplay();
-                }
-            }
-        }
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'notification slide-in';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
+        // Button feedback
+        if (buttonEl) {
+            buttonEl.classList.add('added');
+            buttonEl.querySelector('.btn-text').textContent = '✓ Added';
+            flyToCart(buttonEl);
             setTimeout(() => {
-                notification.classList.remove('slide-in');
-                notification.classList.add('slide-out');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
+                buttonEl.classList.remove('added');
+                buttonEl.querySelector('.btn-text').textContent = 'Add to Cart';
+            }, 1200);
         }
 
-        // Mobile cart toggle
-        const cartIcon = document.querySelector('.cart-icon');
-        if (cartIcon) {
-            cartIcon.addEventListener('click', function(e) {
+        showNotification(`${product.name} added to cart!`);
+    }
+
+    function flyToCart(btnEl) {
+        const btnRect = btnEl.getBoundingClientRect();
+        const cartEl = document.getElementById('cart-count');
+        const cartRect = cartEl.getBoundingClientRect();
+
+        const flyEl = document.createElement('div');
+        flyEl.className = 'fly-item';
+        flyEl.textContent = '🛒';
+        flyEl.style.left = btnRect.left + btnRect.width / 2 - 20 + 'px';
+        flyEl.style.top = btnRect.top + btnRect.height / 2 - 20 + 'px';
+
+        const dx = cartRect.left + cartRect.width / 2 - (btnRect.left + btnRect.width / 2);
+        const dy = cartRect.top + cartRect.height / 2 - (btnRect.top + btnRect.height / 2);
+
+        flyEl.style.setProperty('--fly-x', dx + 'px');
+        flyEl.style.setProperty('--fly-y', dy + 'px');
+        flyEl.style.setProperty('--fly-x-mid', dx * 0.4 + 'px');
+        flyEl.style.setProperty('--fly-y-mid', (dy - 80) + 'px');
+        flyEl.style.animation = 'flyToCart 0.65s cubic-bezier(0.2, 0, 0.38, 0.9) forwards';
+
+        document.body.appendChild(flyEl);
+
+        setTimeout(() => {
+            flyEl.remove();
+            cartEl.classList.add('bounce');
+            setTimeout(() => cartEl.classList.remove('bounce'), 500);
+        }, 650);
+    }
+
+    function removeFromCart(productId) {
+        cart = cart.filter(item => item.id !== productId);
+        localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+        updateCartDisplay();
+    }
+
+    function updateCartQuantity(productId, newQty) {
+        const item = cart.find(item => item.id === productId);
+        if (item) {
+            item.quantity = parseInt(newQty);
+            if (item.quantity <= 0) {
+                removeFromCart(productId);
+            } else {
+                localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+                updateCartDisplay();
+            }
+        }
+    }
+
+    function updateCartDisplay() {
+        const countEl = document.getElementById('cart-count');
+        const itemsEl = document.getElementById('cart-items');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        if (!countEl || !itemsEl) return;
+
+        const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+        const totalAmount = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+        countEl.textContent = totalItems;
+
+        if (cart.length === 0) {
+            itemsEl.innerHTML = '<p class="empty-cart">Your cart is empty</p>';
+            if (checkoutBtn) checkoutBtn.disabled = true;
+        } else {
+            itemsEl.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div class="cart-item-details">
+                        <h4>${item.name}</h4>
+                        <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
+                        <input type="number" class="cart-item-quantity" value="${item.quantity}" min="1" data-product-id="${item.id}">
+                    </div>
+                    <button class="cart-item-remove" data-product-id="${item.id}">×</button>
+                </div>
+            `).join('') + `
+                <div class="cart-total">
+                    <strong>Total: $${totalAmount.toFixed(2)}</strong>
+                </div>
+            `;
+            if (checkoutBtn) checkoutBtn.disabled = false;
+
+            itemsEl.querySelectorAll('.cart-item-quantity').forEach(input => {
+                input.addEventListener('change', function() {
+                    updateCartQuantity(parseInt(this.dataset.productId), this.value);
+                });
+            });
+
+            itemsEl.querySelectorAll('.cart-item-remove').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    removeFromCart(parseInt(this.dataset.productId));
+                });
+            });
+        }
+    }
+
+    // ==================== Search ====================
+    function initSearch() {
+        const input = document.getElementById('search-input');
+        const clearBtn = document.getElementById('search-clear');
+        let debounceTimer;
+
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            clearBtn.style.display = input.value ? '' : 'none';
+            debounceTimer = setTimeout(() => {
+                searchQuery = input.value;
+                filterProducts();
+            }, 200);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            searchQuery = '';
+            clearBtn.style.display = 'none';
+            input.focus();
+            filterProducts();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                input.value = '';
+                searchQuery = '';
+                clearBtn.style.display = 'none';
+                input.blur();
+                filterProducts();
+            }
+        });
+    }
+
+    // ==================== UI Helpers ====================
+    function initCartToggle() {
+        const toggle = document.getElementById('cart-toggle');
+        if (toggle) {
+            toggle.addEventListener('click', (e) => {
                 if (window.innerWidth <= 768) {
                     e.preventDefault();
-                    const cartContainer = this.parentElement;
-                    cartContainer.classList.toggle('active');
+                    toggle.parentElement.classList.toggle('active');
                 }
             });
         }
 
-        // Checkout button
-        const checkoutBtn = document.querySelector('.checkout-btn');
+        const checkoutBtn = document.getElementById('checkout-btn');
         if (checkoutBtn) {
-            checkoutBtn.addEventListener('click', function() {
-                alert('Checkout functionality will be implemented in Phase 2!');
+            checkoutBtn.addEventListener('click', () => {
+                alert('Checkout functionality coming soon!');
             });
         }
+    }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadProducts();
-            updateCartDisplay();
-        });
+    function showNotification(message) {
+        const el = document.createElement('div');
+        el.className = 'notification slide-in';
+        el.textContent = message;
+        document.body.appendChild(el);
+        setTimeout(() => {
+            el.classList.remove('slide-in');
+            el.classList.add('slide-out');
+            setTimeout(() => el.remove(), 300);
+        }, 2500);
+    }
     </script>
 </body>
 </html>

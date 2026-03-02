@@ -3,46 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IEMS5718 Shop - Product</title>
+    <title>Product - 章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/script.js" defer></script>
 </head>
 <body>
-    <header>
-        <h1>IEMS5718 Shop</h1>
-        <nav>
-            <ul>
+
+    <header class="header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">章程's Shop</a>
+            <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="product.html">Products</a></li>
             </ul>
-        </nav>
-        <nav class="breadcrumb" id="breadcrumb">
-            <a href="index.html">Home</a> &gt; <span>Loading...</span>
-        </nav>
-        <div class="cart-container">
-            <div class="cart-icon">
-                🛒 <span class="cart-count">0</span>
-            </div>
-            <div class="cart-dropdown">
-                <h3>Shopping Cart</h3>
-                <div class="cart-items">
-                    <p class="empty-cart">Your cart is empty</p>
+            <div class="cart-container">
+                <div class="cart-icon" id="cart-toggle">
+                    🛒 <span class="cart-count" id="cart-count">0</span>
                 </div>
-                <button class="btn checkout-btn" disabled>Checkout</button>
+                <div class="cart-dropdown">
+                    <div class="cart-dropdown-header">Shopping Cart</div>
+                    <div class="cart-items" id="cart-items">
+                        <p class="empty-cart">Your cart is empty</p>
+                    </div>
+                    <div class="cart-dropdown-footer">
+                        <button class="checkout-btn" id="checkout-btn" disabled>Checkout</button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
+    <div class="breadcrumb-bar" id="breadcrumb">
+        <a href="index.html">Home</a> &gt; <span>Loading...</span>
+    </div>
+
     <main>
         <section class="product-detail" id="product-detail">
-            <div style="text-align: center; padding: 50px;">
-                <p>Loading product details...</p>
+            <div style="text-align: center; padding: 60px; grid-column: 1/-1;">
+                <p style="color: var(--text-secondary);">Loading product details...</p>
             </div>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2024 IEMS5718 Shop. All rights reserved.</p>
+        <p>&copy; 2025 IEMS5718 Shop by 章程. All rights reserved.</p>
     </footer>
+
+    <script src="js/script.js"></script>
 </body>
 </html>

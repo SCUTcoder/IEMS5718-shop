@@ -6,285 +6,377 @@
     <title>Admin Panel - 章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
+        body { background: var(--bg); }
+
         .admin-container {
-            max-width: 1200px;
+            max-width: 960px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 32px 24px 60px;
         }
-        
+
+        .admin-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            transition: color var(--transition);
+        }
+
+        .admin-back:hover { color: var(--primary); }
+
         .admin-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
+            padding: 40px 36px;
+            border-radius: var(--radius);
+            margin-bottom: 32px;
         }
-        
-        .admin-nav {
+
+        .admin-header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+        .admin-header p { opacity: 0.85; margin-top: 6px; font-size: 0.95rem; }
+
+        .admin-tabs {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 8px;
+            margin-top: 24px;
         }
-        
-        .admin-nav button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+
+        .admin-tab {
+            padding: 10px 24px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: var(--radius-full);
             cursor: pointer;
-            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all var(--transition);
         }
-        
-        .admin-nav button:hover,
-        .admin-nav button.active {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+
+        .admin-tab:hover, .admin-tab.active {
+            background: rgba(255,255,255,0.28);
         }
-        
+
         .admin-section {
             display: none;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--bg-white);
+            padding: 32px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
         }
-        
-        .admin-section.active {
-            display: block;
+
+        .admin-section.active { display: block; }
+
+        .admin-section h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text);
         }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
+
+        .form-group { margin-bottom: 20px; }
+
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
-            color: #333;
+            font-size: 0.875rem;
+            color: var(--text);
         }
-        
+
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            box-sizing: border-box;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-family: var(--font);
+            background: var(--bg-white);
+            transition: border-color var(--transition), box-shadow var(--transition);
+            outline: none;
         }
-        
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
-        
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
+
+        .form-group textarea { min-height: 100px; resize: vertical; }
+
+        .form-actions { display: flex; gap: 10px; margin-top: 24px; }
+
         .btn-primary {
-            background: #667eea;
+            background: var(--primary);
             color: white;
-            padding: 12px 30px;
+            padding: 12px 28px;
             border: none;
-            border-radius: 5px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all var(--transition);
         }
-        
+
         .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
         }
-        
+
         .btn-secondary {
-            background: #6c757d;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
+            background: var(--bg);
+            color: var(--text-secondary);
+            padding: 12px 28px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all var(--transition);
         }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
+
+        .btn-secondary:hover { background: var(--border-light); }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 32px;
         }
-        
-        .data-table th,
-        .data-table td {
-            padding: 12px;
+
+        .data-table th, .data-table td {
+            padding: 12px 16px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.9rem;
         }
-        
+
         .data-table th {
-            background: #f8f9fa;
             font-weight: 600;
-            color: #333;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
-        
-        .data-table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .btn-edit,
-        .btn-delete {
-            padding: 6px 12px;
+
+        .data-table tr:hover td { background: var(--border-light); }
+
+        .action-buttons { display: flex; gap: 6px; }
+
+        .btn-edit, .btn-delete {
+            padding: 6px 14px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all var(--transition);
         }
-        
-        .btn-edit {
-            background: #28a745;
-            color: white;
+
+        .btn-edit { background: #ECFDF5; color: #059669; }
+        .btn-edit:hover { background: #D1FAE5; }
+        .btn-delete { background: #FEF2F2; color: #DC2626; }
+        .btn-delete:hover { background: #FEE2E2; }
+
+        .image-upload-zone {
+            position: relative;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: var(--bg);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        
-        .btn-delete {
-            background: #dc3545;
-            color: white;
+
+        .image-upload-zone:hover,
+        .image-upload-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
         }
-        
-        .btn-edit:hover {
-            background: #218838;
+
+        .image-upload-zone .upload-icon { font-size: 2rem; opacity: 0.5; }
+
+        .image-upload-zone .upload-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
         }
-        
-        .btn-delete:hover {
-            background: #c82333;
+
+        .image-upload-zone .upload-text strong { color: var(--primary); }
+
+        .image-upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
         }
-        
-        .image-preview {
-            max-width: 200px;
-            max-height: 200px;
-            margin-top: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+
+        .image-upload-zone.has-image {
+            padding: 0;
+            border-style: solid;
+            border-color: var(--border);
+        }
+
+        .image-upload-zone.has-image:hover { border-color: var(--primary); }
+
+        .image-preview-wrap {
+            position: relative;
             display: none;
+            width: 100%;
         }
-        
-        .image-preview.show {
+
+        .image-preview-wrap.show { display: block; }
+
+        .image-preview-wrap img {
+            width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
             display: block;
         }
-        
+
+        .image-remove-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            z-index: 2;
+            backdrop-filter: blur(4px);
+        }
+
+        .image-remove-btn:hover {
+            background: var(--danger);
+            transform: scale(1.15);
+        }
+
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #28a745;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            top: 24px;
+            right: 24px;
+            background: var(--bg-white);
+            color: var(--text);
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
             z-index: 1000;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-left: 4px solid var(--success);
             animation: slideIn 0.3s ease-out;
         }
-        
-        .notification.error {
-            background: #dc3545;
-        }
-        
+
+        .notification.error { border-left-color: var(--danger); }
+
         @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
-        .back-link:hover {
-            text-decoration: underline;
+
+        .section-divider {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 40px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
         }
     </style>
 </head>
 <body>
     <div class="admin-container">
-        <a href="index.html" class="back-link">← Back to Shop</a>
-        
+        <a href="index.html" class="admin-back">← Back to Shop</a>
+
         <div class="admin-header">
             <h1>Admin Panel</h1>
-            <p>Manage products and categories</p>
-            <div class="admin-nav">
-                <button class="active" data-section="products">Products</button>
-                <button data-section="categories">Categories</button>
+            <p>Manage your products and categories</p>
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-section="products">Products</button>
+                <button class="admin-tab" data-section="categories">Categories</button>
             </div>
         </div>
 
-        <!-- Products Section -->
         <div id="products-section" class="admin-section active">
             <h2>Product Management</h2>
-            
+
             <form id="product-form">
                 <input type="hidden" id="product-id">
-                
+
                 <div class="form-group">
                     <label for="product-category">Category *</label>
                     <select id="product-category" required>
                         <option value="">Select a category</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="product-name">Product Name *</label>
-                    <input type="text" id="product-name" required>
+                    <input type="text" id="product-name" placeholder="Enter product name" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="product-price">Price *</label>
-                    <input type="number" id="product-price" step="0.01" min="0" required>
+                    <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="product-description">Description *</label>
-                    <textarea id="product-description" required></textarea>
+                    <textarea id="product-description" placeholder="Enter product description" required></textarea>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="product-image">Product Image (max 10MB)</label>
-                    <input type="file" id="product-image" accept="image/*">
-                    <img id="image-preview" class="image-preview" alt="Image preview">
+                    <label>Product Image (max 10MB)</label>
+                    <div class="image-upload-zone" id="image-upload-zone">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">
+                            <strong>Click to browse</strong>, drag & drop, or <strong>Ctrl+V</strong> to paste
+                        </div>
+                        <input type="file" id="product-image" accept="image/*">
+                        <div class="image-preview-wrap" id="image-preview-wrap">
+                            <button type="button" class="image-remove-btn" id="image-remove-btn" title="Remove image">×</button>
+                            <img id="image-preview" alt="Image preview">
+                        </div>
+                    </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="product-stock">Stock Quantity</label>
                     <input type="number" id="product-stock" min="0" value="0">
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Save Product</button>
-                    <button type="button" class="btn-secondary" onclick="resetProductForm()">Clear Form</button>
+                    <button type="button" class="btn-secondary" onclick="resetProductForm()">Clear</button>
                 </div>
             </form>
-            
-            <h3 style="margin-top: 40px;">Existing Products</h3>
+
+            <h3 class="section-divider">Existing Products</h3>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -297,30 +389,29 @@
                     </tr>
                 </thead>
                 <tbody id="products-table-body">
-                    <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                    <tr><td colspan="6" style="text-align:center;color:var(--text-light)">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Categories Section -->
         <div id="categories-section" class="admin-section">
             <h2>Category Management</h2>
-            
+
             <form id="category-form">
                 <input type="hidden" id="category-id">
-                
+
                 <div class="form-group">
                     <label for="category-name">Category Name *</label>
-                    <input type="text" id="category-name" required>
+                    <input type="text" id="category-name" placeholder="Enter category name" required>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Save Category</button>
-                    <button type="button" class="btn-secondary" onclick="resetCategoryForm()">Clear Form</button>
+                    <button type="button" class="btn-secondary" onclick="resetCategoryForm()">Clear</button>
                 </div>
             </form>
-            
-            <h3 style="margin-top: 40px;">Existing Categories</h3>
+
+            <h3 class="section-divider">Existing Categories</h3>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -330,7 +421,7 @@
                     </tr>
                 </thead>
                 <tbody id="categories-table-body">
-                    <tr><td colspan="3" style="text-align: center;">Loading...</td></tr>
+                    <tr><td colspan="3" style="text-align:center;color:var(--text-light)">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
