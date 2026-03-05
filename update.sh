@@ -63,15 +63,15 @@ echo "Updating systemd service..."
 sudo cp /opt/app/IEMS5718-shop/backend/iems5718-shop.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
-# 7. 构建前先把 target/ 还给当前用户，避免 mvn clean 权限失败
+# 7. 构建前强制删除 target/（避免 mvn clean 因权限失败）
 echo ""
 echo "Preparing build directory..."
-sudo chown -R $(whoami):$(whoami) /opt/app/IEMS5718-shop/backend/target 2>/dev/null || true
+sudo rm -rf /opt/app/IEMS5718-shop/backend/target
 
 # 8. 构建后端
 echo ""
 echo "Building backend..."
-mvn clean package -DskipTests
+mvn package -DskipTests
 
 # 8. 构建完成后修复权限（mvn 以 ubuntu 用户运行会重置目录 owner）
 echo "Fixing permissions after build..."
