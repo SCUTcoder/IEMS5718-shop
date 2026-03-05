@@ -51,11 +51,9 @@ else
     echo "✓ Database OK"
 fi
 
-# 确保数据库文件及目录对 www-data 可写
+# 确保数据库文件权限
 sudo chown www-data:www-data shop.db
 sudo chmod 664 shop.db
-sudo chown www-data:www-data /opt/app/IEMS5718-shop/backend
-sudo chmod 775 /opt/app/IEMS5718-shop/backend
 
 # 6. 更新 systemd service 文件
 echo ""
@@ -63,17 +61,18 @@ echo "Updating systemd service..."
 sudo cp /opt/app/IEMS5718-shop/backend/iems5718-shop.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
-# 7. 构建前强制删除 target/（避免 mvn clean 因权限失败）
+# 7. 构建前：删 target/，把 backend/ 还给 ubuntu 以便 mvn 写入
 echo ""
 echo "Preparing build directory..."
 sudo rm -rf /opt/app/IEMS5718-shop/backend/target
+sudo chown ubuntu:ubuntu /opt/app/IEMS5718-shop/backend
 
 # 8. 构建后端
 echo ""
 echo "Building backend..."
 mvn package -DskipTests
 
-# 8. 构建完成后修复权限（mvn 以 ubuntu 用户运行会重置目录 owner）
+# 9. 构建完成后把 backend/ 和 shop.db 还给 www-data（服务运行需要）
 echo "Fixing permissions after build..."
 sudo chown www-data:www-data /opt/app/IEMS5718-shop/backend/shop.db
 sudo chmod 664 /opt/app/IEMS5718-shop/backend/shop.db
