@@ -69,6 +69,17 @@ public class ProductController {
         }
     }
     
+    @PatchMapping("/{id}/weight")
+    public ResponseEntity<?> updateWeight(@PathVariable Long id, @RequestBody java.util.Map<String, Integer> body) {
+        try {
+            Integer weight = body.get("weight");
+            if (weight == null) return ResponseEntity.badRequest().body("weight is required");
+            return ResponseEntity.ok(productService.updateWeight(id, weight));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/upload")
     public ResponseEntity<?> createProductWithImage(
             @RequestParam("catid") Long catid,
@@ -76,15 +87,16 @@ public class ProductController {
             @RequestParam("price") Double price,
             @RequestParam("description") String description,
             @RequestParam(value = "stockQuantity", defaultValue = "0") Integer stockQuantity,
+            @RequestParam(value = "weight", defaultValue = "0") Integer weight,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
-            Product product = productService.createProductWithImage(catid, name, price, description, stockQuantity, image);
+            Product product = productService.createProductWithImage(catid, name, price, description, stockQuantity, weight, image);
             return ResponseEntity.status(HttpStatus.CREATED).body(product);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    
+
     @PutMapping("/{id}/upload")
     public ResponseEntity<?> updateProductWithImage(
             @PathVariable Long id,
@@ -93,9 +105,10 @@ public class ProductController {
             @RequestParam(value = "price", required = false) Double price,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "stockQuantity", required = false) Integer stockQuantity,
+            @RequestParam(value = "weight", required = false) Integer weight,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
-            Product product = productService.updateProductWithImage(id, catid, name, price, description, stockQuantity, image);
+            Product product = productService.updateProductWithImage(id, catid, name, price, description, stockQuantity, weight, image);
             return ResponseEntity.ok(product);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

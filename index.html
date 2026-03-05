@@ -138,6 +138,8 @@
                 return String(catid) === String(activeCategory);
             });
 
+        filtered = [...filtered].sort((a, b) => (b.weight || 0) - (a.weight || 0) || (a.pid || 0) - (b.pid || 0));
+
         const q = searchQuery.trim().toLowerCase();
         if (q) {
             filtered = filtered.filter(p =>

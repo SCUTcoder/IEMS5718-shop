@@ -40,7 +40,10 @@ public class Product {
     
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
-    
+
+    @Column(nullable = false)
+    private Integer weight = 0;
+
     @Column(nullable = false)
     private Boolean active = true;
 }

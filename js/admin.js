@@ -236,25 +236,94 @@ async function loadProducts() {
 
 function renderProductsTable() {
     const tbody = document.getElementById('products-table-body');
-    
+
     if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No products found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No products found</td></tr>';
         return;
     }
-    
-    tbody.innerHTML = products.map(product => `
+
+    tbody.innerHTML = products.map(product => {
+        const w = product.weight || 0;
+        const badgeClass = w >= 100 ? 'top' : w >= 50 ? 'high' : '';
+        return `
         <tr>
             <td>${product.pid}</td>
             <td>${product.name}</td>
             <td>${product.category ? product.category.name : 'N/A'}</td>
             <td>$${product.price.toFixed(2)}</td>
             <td>${product.stockQuantity || 0}</td>
+            <td>
+                <div class="weight-cell">
+                    <span class="weight-badge ${badgeClass}" id="weight-badge-${product.pid}">${w}</span>
+                    <input type="number" class="weight-input" id="weight-input-${product.pid}"
+                           value="${w}" min="0" max="9999" style="display:none">
+                    <button class="btn-weight-save" id="weight-edit-btn-${product.pid}"
+                            onclick="toggleWeightEdit(${product.pid})" title="Edit weight">✏️</button>
+                    <button class="btn-weight-save" id="weight-save-btn-${product.pid}"
+                            onclick="saveWeight(${product.pid})" style="display:none">Save</button>
+                </div>
+            </td>
             <td class="action-buttons">
                 <button class="btn-edit" onclick="editProduct(${product.pid})">Edit</button>
                 <button class="btn-delete" onclick="deleteProduct(${product.pid})">Delete</button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
+}
+
+function toggleWeightEdit(pid) {
+    const badge = document.getElementById(`weight-badge-${pid}`);
+    const input = document.getElementById(`weight-input-${pid}`);
+    const editBtn = document.getElementById(`weight-edit-btn-${pid}`);
+    const saveBtn = document.getElementById(`weight-save-btn-${pid}`);
+    const isEditing = input.style.display !== 'none';
+
+    if (isEditing) {
+        badge.style.display = '';
+        input.style.display = 'none';
+        editBtn.style.display = '';
+        saveBtn.style.display = 'none';
+    } else {
+        badge.style.display = 'none';
+        input.style.display = '';
+        input.focus();
+        input.select();
+        editBtn.style.display = 'none';
+        saveBtn.style.display = '';
+    }
+}
+
+async function saveWeight(pid) {
+    const input = document.getElementById(`weight-input-${pid}`);
+    const weight = parseInt(input.value) || 0;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/${pid}/weight`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ weight })
+        });
+
+        if (!response.ok) throw new Error('Failed to update weight');
+
+        const updated = await response.json();
+        const p = products.find(p => p.pid === pid);
+        if (p) p.weight = updated.weight;
+
+        const badge = document.getElementById(`weight-badge-${pid}`);
+        const w = updated.weight || 0;
+        badge.textContent = w;
+        badge.className = 'weight-badge' + (w >= 100 ? ' top' : w >= 50 ? ' high' : '');
+
+        toggleWeightEdit(pid);
+        showNotification(`Weight updated to ${w}`);
+
+        // Re-sort table by weight
+        products.sort((a, b) => (b.weight || 0) - (a.weight || 0) || a.pid - b.pid);
+        renderProductsTable();
+    } catch (error) {
+        showNotification('Failed to update weight', 'error');
+    }
 }
 
 async function handleProductSubmit(e) {
@@ -266,11 +335,12 @@ async function handleProductSubmit(e) {
     const price = parseFloat(document.getElementById('product-price').value);
     const description = document.getElementById('product-description').value;
     const stockQuantity = parseInt(document.getElementById('product-stock').value) || 0;
+    const weight = parseInt(document.getElementById('product-weight').value) || 0;
     const imageFile = selectedImageFile || document.getElementById('product-image').files[0];
-    
+
     try {
         let response;
-        
+
         // If image file is provided, use multipart/form-data
         if (imageFile) {
             const formData = new FormData();
@@ -279,6 +349,7 @@ async function handleProductSubmit(e) {
             formData.append('price', price);
             formData.append('description', description);
             formData.append('stockQuantity', stockQuantity);
+            formData.append('weight', weight);
             formData.append('image', imageFile);
             
             if (id) {
@@ -302,6 +373,7 @@ async function handleProductSubmit(e) {
                 price,
                 description,
                 stockQuantity,
+                weight,
                 active: true
             };
             
@@ -346,6 +418,7 @@ function editProduct(id) {
         document.getElementById('product-price').value = product.price;
         document.getElementById('product-description').value = product.description;
         document.getElementById('product-stock').value = product.stockQuantity || 0;
+        document.getElementById('product-weight').value = product.weight || 0;
 
         clearImageSelection();
         if (product.imageUrl) {

@@ -10,11 +10,11 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     
-    List<Product> findByActiveTrue();
-    
-    List<Product> findByCategoryAndActiveTrue(Category category);
-    
-    List<Product> findByCategoryCatidAndActiveTrue(Long catid);
-    
-    List<Product> findByNameContainingIgnoreCaseAndActiveTrue(String keyword);
+    List<Product> findByActiveTrueOrderByWeightDescPidAsc();
+
+    List<Product> findByCategoryAndActiveTrueOrderByWeightDescPidAsc(Category category);
+
+    List<Product> findByCategoryCatidAndActiveTrueOrderByWeightDescPidAsc(Long catid);
+
+    List<Product> findByNameContainingIgnoreCaseAndActiveTrueOrderByWeightDescPidAsc(String keyword);
 }

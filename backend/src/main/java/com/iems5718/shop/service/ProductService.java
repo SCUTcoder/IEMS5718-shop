@@ -24,19 +24,26 @@ public class ProductService {
     private ImageService imageService;
     
     public List<Product> getAllProducts() {
-        return productRepository.findByActiveTrue();
+        return productRepository.findByActiveTrueOrderByWeightDescPidAsc();
     }
-    
+
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }
-    
+
     public List<Product> getProductsByCategory(Long catid) {
-        return productRepository.findByCategoryCatidAndActiveTrue(catid);
+        return productRepository.findByCategoryCatidAndActiveTrueOrderByWeightDescPidAsc(catid);
     }
-    
+
     public List<Product> searchProducts(String keyword) {
-        return productRepository.findByNameContainingIgnoreCaseAndActiveTrue(keyword);
+        return productRepository.findByNameContainingIgnoreCaseAndActiveTrueOrderByWeightDescPidAsc(keyword);
+    }
+
+    public Product updateWeight(Long id, Integer weight) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        product.setWeight(weight);
+        return productRepository.save(product);
     }
     
     public Product createProduct(Product product) {
@@ -60,6 +67,9 @@ public class ProductService {
         product.setThumbnailUrls(productDetails.getThumbnailUrls());
         product.setStockQuantity(productDetails.getStockQuantity());
         product.setActive(productDetails.getActive());
+        if (productDetails.getWeight() != null) {
+            product.setWeight(productDetails.getWeight());
+        }
         
         // Update category if provided
         if (productDetails.getCategory() != null && productDetails.getCategory().getCatid() != null) {
@@ -78,18 +88,18 @@ public class ProductService {
         productRepository.save(product);
     }
     
-    public Product createProductWithImage(Long catid, String name, Double price, String description, 
-                                         Integer stockQuantity, MultipartFile image) throws Exception {
-        // Create product
+    public Product createProductWithImage(Long catid, String name, Double price, String description,
+                                         Integer stockQuantity, Integer weight, MultipartFile image) throws Exception {
         Category category = categoryRepository.findById(catid)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
-        
+
         Product product = new Product();
         product.setCategory(category);
         product.setName(name);
         product.setPrice(price);
         product.setDescription(description);
         product.setStockQuantity(stockQuantity);
+        product.setWeight(weight != null ? weight : 0);
         product.setActive(true);
         
         // Save product first to get ID
@@ -106,12 +116,11 @@ public class ProductService {
         return product;
     }
     
-    public Product updateProductWithImage(Long id, Long catid, String name, Double price, 
-                                         String description, Integer stockQuantity, MultipartFile image) throws Exception {
+    public Product updateProductWithImage(Long id, Long catid, String name, Double price,
+                                         String description, Integer stockQuantity, Integer weight, MultipartFile image) throws Exception {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        
-        // Update fields if provided
+
         if (catid != null) {
             Category category = categoryRepository.findById(catid)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
@@ -121,6 +130,7 @@ public class ProductService {
         if (price != null) product.setPrice(price);
         if (description != null) product.setDescription(description);
         if (stockQuantity != null) product.setStockQuantity(stockQuantity);
+        if (weight != null) product.setWeight(weight);
         
         // Upload new image if provided
         if (image != null && !image.isEmpty()) {
