@@ -41,7 +41,7 @@ public class Product {
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "integer default 0")
     private Integer weight = 0;
 
     @Column(nullable = false)
