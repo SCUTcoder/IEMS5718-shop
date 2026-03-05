@@ -51,6 +51,12 @@ else
     echo "✓ Database OK"
 fi
 
+# 确保数据库文件及目录对 www-data 可写
+sudo chown www-data:www-data shop.db
+sudo chmod 664 shop.db
+sudo chown www-data:www-data /opt/app/IEMS5718-shop/backend
+sudo chmod 775 /opt/app/IEMS5718-shop/backend
+
 # 6. 构建后端
 echo ""
 echo "Building backend..."
