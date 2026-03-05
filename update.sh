@@ -57,20 +57,39 @@ sudo chmod 664 shop.db
 sudo chown www-data:www-data /opt/app/IEMS5718-shop/backend
 sudo chmod 775 /opt/app/IEMS5718-shop/backend
 
-# 6. 构建后端
+# 6. 更新 systemd service 文件
+echo ""
+echo "Updating systemd service..."
+sudo cp /opt/app/IEMS5718-shop/backend/iems5718-shop.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+# 7. 构建后端
 echo ""
 echo "Building backend..."
 mvn clean package -DskipTests
 
-# 7. 启动后端服务
+# 8. 构建完成后修复权限（mvn 以 ubuntu 用户运行会重置目录 owner）
+echo "Fixing permissions after build..."
+sudo chown www-data:www-data /opt/app/IEMS5718-shop/backend/shop.db
+sudo chmod 664 /opt/app/IEMS5718-shop/backend/shop.db
+sudo chown www-data:www-data /opt/app/IEMS5718-shop/backend
+sudo chmod 775 /opt/app/IEMS5718-shop/backend
+
+# 9. 更新 nginx 配置并重载
+echo ""
+echo "Updating nginx config..."
+sudo cp /opt/app/IEMS5718-shop/nginx.conf /etc/nginx/sites-enabled/iems5718-shop
+sudo nginx -t && sudo systemctl reload nginx
+
+# 10. 启动后端服务
 echo ""
 echo "Starting backend..."
 sudo systemctl start iems5718-shop
 
-# 8. 检查状态
+# 11. 检查状态
 echo ""
 echo "Checking status..."
-sleep 3
+sleep 5
 sudo systemctl status iems5718-shop --no-pager
 
 echo ""
