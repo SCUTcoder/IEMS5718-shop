@@ -22,11 +22,12 @@ sudo cp -r css /var/www/html/
 sudo cp -r js /var/www/html/
 sudo rsync -av --ignore-existing images/ /var/www/html/images/
 
-# 4. 确保图片目录权限
+# 4. 确保图片目录权限（后端 www-data 用户需要写入权限）
 sudo mkdir -p /var/www/html/images/products
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
 sudo chmod -R 775 /var/www/html/images/products
+sudo chown www-data:www-data /var/www/html/images/products
 
 # 5. 检查数据库
 echo ""

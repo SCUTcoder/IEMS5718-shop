@@ -7,7 +7,10 @@ Type=simple
 User=www-data
 Group=www-data
 WorkingDirectory=/opt/app/IEMS5718-shop/backend
-ExecStart=/usr/bin/java -jar /opt/app/IEMS5718-shop/backend/target/shop-backend-1.0.0.jar
+ExecStart=/usr/bin/java \
+    -Dapp.image.storage-dir=/var/www/html/images/products/ \
+    -Dapp.image.url-prefix=images/products/ \
+    -jar /opt/app/IEMS5718-shop/backend/target/shop-backend-1.0.0.jar
 Restart=always
 RestartSec=10
 
