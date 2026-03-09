@@ -9,12 +9,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
+
+    private record StoredProductImage(String imageUrl, String thumbnailUrl) {}
     
     @Autowired
     private ProductRepository productRepository;
@@ -133,7 +137,9 @@ public class ProductService {
     
     public Product updateProductWithImage(Long id, Long catid, String name, Double price,
                                          String description, Integer stockQuantity, Integer weight,
-                                         MultipartFile[] images, MultipartFile video) throws Exception {
+                                         MultipartFile[] images, MultipartFile video, Boolean replaceImages,
+                                         String retainedGalleryImageUrls, String retainedThumbnailUrls,
+                                         Boolean clearVideo) throws Exception {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -148,7 +154,7 @@ public class ProductService {
         if (stockQuantity != null) product.setStockQuantity(stockQuantity);
         if (weight != null) product.setWeight(weight);
         
-        applyUploadedMedia(product, images, video);
+        applyUpdatedMedia(product, images, video, replaceImages, retainedGalleryImageUrls, retainedThumbnailUrls, clearVideo);
         syncProductMedia(product);
         
         return productRepository.save(product);
@@ -182,6 +188,60 @@ public class ProductService {
         return updated;
     }
 
+    private boolean applyUpdatedMedia(Product product, MultipartFile[] images, MultipartFile video,
+                                      Boolean replaceImages, String retainedGalleryImageUrls,
+                                      String retainedThumbnailUrls, Boolean clearVideo) throws Exception {
+        boolean updated = false;
+
+        if (Boolean.TRUE.equals(replaceImages)) {
+            List<StoredProductImage> retainedImages = buildImagePairsFromCsv(retainedGalleryImageUrls, retainedThumbnailUrls);
+            List<StoredProductImage> currentImages = buildStoredImagePairs(product);
+            Set<String> retainedKeys = retainedImages.stream()
+                    .map(this::mediaKey)
+                    .collect(Collectors.toCollection(HashSet::new));
+
+            List<String> filesToDelete = new ArrayList<>();
+            for (StoredProductImage image : currentImages) {
+                if (!retainedKeys.contains(mediaKey(image))) {
+                    filesToDelete.add(image.imageUrl());
+                    filesToDelete.add(image.thumbnailUrl());
+                }
+            }
+            imageService.deleteProductImageFiles(filesToDelete);
+
+            List<StoredProductImage> finalImages = new ArrayList<>(retainedImages);
+            if (hasFiles(images)) {
+                List<ImageService.UploadedImage> uploadedImages = imageService.uploadProductImages(images, product.getPid());
+                finalImages.addAll(uploadedImages.stream()
+                        .map(uploaded -> new StoredProductImage(uploaded.imageUrl(), uploaded.thumbnailUrl()))
+                        .toList());
+            }
+
+            applyImagePairs(product, finalImages);
+            updated = true;
+        } else if (hasFiles(images)) {
+            imageService.deleteProductImages(product.getImageUrl(), product.getThumbnailUrls(), product.getGalleryImageUrls());
+
+            List<ImageService.UploadedImage> uploadedImages = imageService.uploadProductImages(images, product.getPid());
+            applyImagePairs(product, uploadedImages.stream()
+                    .map(uploaded -> new StoredProductImage(uploaded.imageUrl(), uploaded.thumbnailUrl()))
+                    .toList());
+            updated = true;
+        }
+
+        if (video != null && !video.isEmpty()) {
+            imageService.deleteProductVideo(product.getVideoUrl());
+            product.setVideoUrl(imageService.uploadProductVideo(video, product.getPid()));
+            updated = true;
+        } else if (Boolean.TRUE.equals(clearVideo) && product.getVideoUrl() != null && !product.getVideoUrl().isBlank()) {
+            imageService.deleteProductVideo(product.getVideoUrl());
+            product.setVideoUrl(null);
+            updated = true;
+        }
+
+        return updated;
+    }
+
     private boolean hasFiles(MultipartFile[] files) {
         if (files == null) {
             return false;
@@ -192,6 +252,63 @@ public class ProductService {
             }
         }
         return false;
+    }
+
+    private void applyImagePairs(Product product, List<StoredProductImage> imagePairs) {
+        if (imagePairs == null || imagePairs.isEmpty()) {
+            product.setImageUrl(null);
+            product.setGalleryImageUrls(null);
+            product.setThumbnailUrls(null);
+            return;
+        }
+
+        product.setImageUrl(imagePairs.get(0).imageUrl());
+        product.setGalleryImageUrls(imagePairs.stream()
+                .map(StoredProductImage::imageUrl)
+                .collect(Collectors.joining(",")));
+        product.setThumbnailUrls(imagePairs.stream()
+                .map(StoredProductImage::thumbnailUrl)
+                .collect(Collectors.joining(",")));
+    }
+
+    private List<StoredProductImage> buildStoredImagePairs(Product product) {
+        List<String> galleryImages = splitCsv(product.getGalleryImageUrls());
+        List<String> thumbnailImages = splitCsv(product.getThumbnailUrls());
+
+        if (galleryImages.size() > 1) {
+            return buildImagePairs(galleryImages, thumbnailImages.size() == galleryImages.size() ? thumbnailImages : galleryImages);
+        }
+        if (galleryImages.size() <= 1 && thumbnailImages.size() > galleryImages.size()) {
+            return buildImagePairs(thumbnailImages, thumbnailImages);
+        }
+        if (galleryImages.size() == 1) {
+            return buildImagePairs(galleryImages, thumbnailImages.size() == 1 ? thumbnailImages : galleryImages);
+        }
+        if (!thumbnailImages.isEmpty()) {
+            return buildImagePairs(thumbnailImages, thumbnailImages);
+        }
+        if (product.getImageUrl() != null && !product.getImageUrl().isBlank()) {
+            return buildImagePairs(List.of(product.getImageUrl().trim()), List.of(product.getImageUrl().trim()));
+        }
+        return new ArrayList<>();
+    }
+
+    private List<StoredProductImage> buildImagePairsFromCsv(String galleryImageUrls, String thumbnailUrls) {
+        return buildImagePairs(splitCsv(galleryImageUrls), splitCsv(thumbnailUrls));
+    }
+
+    private List<StoredProductImage> buildImagePairs(List<String> galleryImages, List<String> thumbnailImages) {
+        List<StoredProductImage> imagePairs = new ArrayList<>();
+        for (int index = 0; index < galleryImages.size(); index++) {
+            String imageUrl = galleryImages.get(index);
+            String thumbnailUrl = index < thumbnailImages.size() ? thumbnailImages.get(index) : imageUrl;
+            imagePairs.add(new StoredProductImage(imageUrl, thumbnailUrl));
+        }
+        return imagePairs;
+    }
+
+    private String mediaKey(StoredProductImage image) {
+        return image.imageUrl() + "|" + image.thumbnailUrl();
     }
 
     private void syncProductMedia(Product product) {

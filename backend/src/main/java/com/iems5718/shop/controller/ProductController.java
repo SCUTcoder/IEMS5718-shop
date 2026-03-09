@@ -108,10 +108,16 @@ public class ProductController {
             @RequestParam(value = "weight", required = false) Integer weight,
             @RequestParam(value = "images", required = false) MultipartFile[] images,
             @RequestParam(value = "image", required = false) MultipartFile image,
-            @RequestParam(value = "video", required = false) MultipartFile video) {
+            @RequestParam(value = "video", required = false) MultipartFile video,
+            @RequestParam(value = "replaceImages", defaultValue = "false") Boolean replaceImages,
+            @RequestParam(value = "retainedGalleryImageUrls", required = false) String retainedGalleryImageUrls,
+            @RequestParam(value = "retainedThumbnailUrls", required = false) String retainedThumbnailUrls,
+            @RequestParam(value = "clearVideo", defaultValue = "false") Boolean clearVideo) {
         try {
             Product product = productService.updateProductWithImage(
-                    id, catid, name, price, description, stockQuantity, weight, mergeImageFiles(images, image), video);
+                    id, catid, name, price, description, stockQuantity, weight,
+                    mergeImageFiles(images, image), video, replaceImages, retainedGalleryImageUrls,
+                    retainedThumbnailUrls, clearVideo);
             return ResponseEntity.ok(product);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

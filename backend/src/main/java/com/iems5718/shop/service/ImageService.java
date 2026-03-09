@@ -148,6 +148,17 @@ public class ImageService {
         }
     }
 
+    public void deleteProductImageFiles(List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return;
+        }
+
+        Set<String> filesToDelete = new LinkedHashSet<>(imageUrls);
+        for (String url : filesToDelete) {
+            deleteManagedFile(url, urlPrefix, storageDir);
+        }
+    }
+
     public void deleteProductVideo(String videoUrl) {
         deleteManagedFile(videoUrl, videoUrlPrefix, videoStorageDir);
     }

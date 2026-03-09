@@ -256,6 +256,7 @@
         }
 
         .image-preview-card {
+            position: relative;
             background: white;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
@@ -280,6 +281,67 @@
             box-shadow: 0 0 0 3px var(--primary-light);
         }
 
+        .image-preview-item-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(15, 23, 42, 0.78);
+            color: white;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--transition), background var(--transition);
+            z-index: 2;
+        }
+
+        .image-preview-item-remove:hover {
+            background: var(--danger);
+            transform: scale(1.08);
+        }
+
+        .image-preview-status {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--text);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            z-index: 1;
+        }
+
+        .image-preview-card-body {
+            padding: 10px 12px 12px;
+            text-align: left;
+        }
+
+        .image-preview-card-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .image-preview-card-meta {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+            word-break: break-word;
+            line-height: 1.45;
+        }
+
         .video-upload-zone video {
             width: 100%;
             max-height: 280px;
@@ -298,6 +360,24 @@
             margin-top: 8px;
             font-size: 0.8rem;
             color: var(--text-secondary);
+        }
+
+        .media-action-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .btn-media-action {
+            padding: 10px 16px;
+            font-size: 0.82rem;
+        }
+
+        .btn-media-action:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .image-remove-btn {
@@ -464,11 +544,14 @@
                         </div>
                         <input type="file" id="product-images" accept="image/*" multiple>
                         <div class="image-preview-wrap" id="image-preview-wrap">
-                            <button type="button" class="image-remove-btn" id="image-remove-btn" title="Clear selected photos" style="display:none">×</button>
                             <div class="image-preview-grid" id="image-preview-list"></div>
                         </div>
                     </div>
-                    <div class="upload-hint">Editing a product without uploading new photos keeps the existing gallery.</div>
+                    <div class="media-action-row">
+                        <button type="button" class="btn-secondary btn-media-action" id="image-browse-btn">Add Photos</button>
+                        <button type="button" class="btn-secondary btn-media-action" id="image-clear-all-btn">Remove All Photos</button>
+                    </div>
+                    <div class="upload-hint">Editing a product will load the current gallery here. You can remove individual photos or append new ones; the first remaining photo becomes the cover.</div>
                 </div>
 
                 <div class="form-group">
@@ -480,12 +563,15 @@
                         </div>
                         <input type="file" id="product-video" accept="video/*">
                         <div class="image-preview-wrap" id="video-preview-wrap">
-                            <button type="button" class="image-remove-btn" id="video-remove-btn" title="Clear selected video" style="display:none">×</button>
                             <video id="video-preview" controls playsinline preload="metadata"></video>
                             <div class="video-preview-name" id="video-preview-name"></div>
                         </div>
                     </div>
-                    <div class="upload-hint">Editing a product without uploading a new video keeps the current video.</div>
+                    <div class="media-action-row">
+                        <button type="button" class="btn-secondary btn-media-action" id="video-browse-btn">Choose Video</button>
+                        <button type="button" class="btn-secondary btn-media-action" id="video-clear-btn">Remove Video</button>
+                    </div>
+                    <div class="upload-hint">Editing a product will load the current video here. You can replace it or remove it entirely.</div>
                 </div>
 
                 <div class="form-group">
