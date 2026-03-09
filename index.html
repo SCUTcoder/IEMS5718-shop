@@ -205,12 +205,16 @@
         const catName = product.category ? (product.category.name || product.category) : '';
         const name = query ? highlightText(product.name, query) : product.name;
         const desc = query ? highlightText(product.description || '', query) : (product.description || '');
+        const primaryMedia = getPrimaryCardMedia(product);
 
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
             <a href="product.html?id=${id}" class="product-card-image">
-                <img src="${product.imageUrl || product.thumbnailUrl || 'images/product1.jpg'}" alt="${product.name}" loading="lazy">
+                ${primaryMedia.type === 'video'
+                    ? `<video src="${primaryMedia.src}" muted autoplay loop playsinline preload="metadata"></video>`
+                    : `<img src="${primaryMedia.src}" alt="${product.name}" loading="lazy">`
+                }
             </a>
             <div class="product-card-body">
                 ${catName ? `<div class="product-card-category">${catName}</div>` : ''}
@@ -225,6 +229,16 @@
             </div>
         `;
         return card;
+    }
+
+    function getPrimaryCardMedia(product) {
+        if (product.videoUrl) {
+            return { type: 'video', src: product.videoUrl };
+        }
+        return {
+            type: 'image',
+            src: product.imageUrl || product.thumbnailUrl || 'images/product1.jpg'
+        };
     }
 
     function highlightText(text, query) {
