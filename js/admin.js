@@ -226,17 +226,19 @@ function renderImagePreview() {
     }
 
     previewList.innerHTML = imageMediaItems.map((item, index) => {
-        const previewSrc = item.source === 'new' ? item.previewUrl : (item.thumbnailUrl || item.imageUrl);
+        const previewSrc = item.source === 'new' ? item.previewUrl : item.imageUrl;
         const title = index === 0 ? 'Cover Photo' : `Photo ${index + 1}`;
         const meta = item.source === 'new'
             ? escapeHtml(item.name)
-            : (item.thumbnailUrl && item.thumbnailUrl !== item.imageUrl ? 'Current image (with thumbnail)' : 'Current image');
+            : 'Current saved image';
 
         return `
             <div class="image-preview-card ${index === 0 ? 'is-cover' : ''}">
                 <button type="button" class="image-preview-item-remove" data-image-id="${item.id}" title="Remove this photo">×</button>
                 <span class="image-preview-status">${item.source === 'new' ? 'New' : 'Current'}</span>
-                <img src="${previewSrc}" alt="Product preview ${index + 1}">
+                <div class="image-preview-media">
+                    <img src="${previewSrc}" alt="Product preview ${index + 1}">
+                </div>
                 <div class="image-preview-card-body">
                     <div class="image-preview-card-title">${escapeHtml(title)}</div>
                     <div class="image-preview-card-meta">${meta}</div>
