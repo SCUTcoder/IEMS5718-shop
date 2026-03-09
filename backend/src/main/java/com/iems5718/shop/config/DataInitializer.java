@@ -41,6 +41,7 @@ public class DataInitializer implements CommandLineRunner {
             laptop.setPrice(1299.99);
             laptop.setImageUrl("images/product1.jpg");
             laptop.setThumbnailUrls("images/product1.jpg,images/product1-2.jpg,images/product1-3.jpg,images/product1-4.jpg");
+            laptop.setGalleryImageUrls("images/product1.jpg,images/product1-2.jpg,images/product1-3.jpg,images/product1-4.jpg");
             laptop.setCategory(electronicsCategory);
             laptop.setStockQuantity(15);
             laptop.setActive(true);
@@ -52,6 +53,7 @@ public class DataInitializer implements CommandLineRunner {
             headphones.setPrice(249.99);
             headphones.setImageUrl("images/product2.jpg");
             headphones.setThumbnailUrls("images/product2.jpg");
+            headphones.setGalleryImageUrls("images/product2.jpg");
             headphones.setCategory(electronicsCategory);
             headphones.setStockQuantity(50);
             headphones.setActive(true);
@@ -63,6 +65,7 @@ public class DataInitializer implements CommandLineRunner {
             smartwatch.setPrice(399.99);
             smartwatch.setImageUrl("images/product3.jpg");
             smartwatch.setThumbnailUrls("images/product3.jpg");
+            smartwatch.setGalleryImageUrls("images/product3.jpg");
             smartwatch.setCategory(electronicsCategory);
             smartwatch.setStockQuantity(30);
             smartwatch.setActive(true);
@@ -74,6 +77,7 @@ public class DataInitializer implements CommandLineRunner {
             tablet.setPrice(599.99);
             tablet.setImageUrl("images/product4.jpg");
             tablet.setThumbnailUrls("images/product4.jpg");
+            tablet.setGalleryImageUrls("images/product4.jpg");
             tablet.setCategory(electronicsCategory);
             tablet.setStockQuantity(25);
             tablet.setActive(true);
@@ -86,6 +90,7 @@ public class DataInitializer implements CommandLineRunner {
             tshirt.setPrice(29.99);
             tshirt.setImageUrl("images/product1.jpg"); // Using placeholder image
             tshirt.setThumbnailUrls("images/product1.jpg");
+            tshirt.setGalleryImageUrls("images/product1.jpg");
             tshirt.setCategory(clothingCategory);
             tshirt.setStockQuantity(100);
             tshirt.setActive(true);
@@ -97,6 +102,7 @@ public class DataInitializer implements CommandLineRunner {
             jeans.setPrice(79.99);
             jeans.setImageUrl("images/product2.jpg"); // Using placeholder image
             jeans.setThumbnailUrls("images/product2.jpg");
+            jeans.setGalleryImageUrls("images/product2.jpg");
             jeans.setCategory(clothingCategory);
             jeans.setStockQuantity(75);
             jeans.setActive(true);

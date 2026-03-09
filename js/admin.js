@@ -1,4 +1,3 @@
-// API Base URL
 const API_BASE_URL = (window.location.protocol === 'file:' ||
                      window.location.hostname === 'localhost' ||
                      window.location.hostname === '127.0.0.1' ||
@@ -6,9 +5,17 @@ const API_BASE_URL = (window.location.protocol === 'file:' ||
     ? 'http://localhost:8080/api'
     : window.location.origin + '/api';
 
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+
 let categories = [];
 let products = [];
-let selectedImageFile = null;
+let selectedImageFiles = [];
+let selectedVideoFile = null;
+let existingImageUrls = [];
+let existingVideoUrl = '';
+let imagePreviewObjectUrls = [];
+let videoPreviewObjectUrl = '';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadCategories();
@@ -20,79 +27,239 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    initImageUpload();
+    initMediaUploads();
 
     document.getElementById('product-form').addEventListener('submit', handleProductSubmit);
     document.getElementById('category-form').addEventListener('submit', handleCategorySubmit);
 });
 
+function initMediaUploads() {
+    initImageUpload();
+    initVideoUpload();
+}
+
 function initImageUpload() {
     const zone = document.getElementById('image-upload-zone');
-    const fileInput = document.getElementById('product-image');
-    const previewWrap = document.getElementById('image-preview-wrap');
-    const preview = document.getElementById('image-preview');
+    const fileInput = document.getElementById('product-images');
     const removeBtn = document.getElementById('image-remove-btn');
 
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files[0]) setImageFile(e.target.files[0]);
+    fileInput.addEventListener('change', (event) => {
+        setImageFiles(Array.from(event.target.files || []));
     });
 
-    removeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        clearImageSelection();
+    removeBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        clearImageSelection(true);
     });
 
-    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        zone.classList.add('dragover');
+    });
+
     zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-    zone.addEventListener('drop', (e) => {
-        e.preventDefault();
+
+    zone.addEventListener('drop', (event) => {
+        event.preventDefault();
         zone.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) setImageFile(file);
+        const files = Array.from(event.dataTransfer.files || []).filter(file => file.type.startsWith('image/'));
+        if (files.length > 0) {
+            setImageFiles(files);
+        }
     });
 
-    document.addEventListener('paste', (e) => {
+    document.addEventListener('paste', (event) => {
         const productSection = document.getElementById('products-section');
         if (!productSection.classList.contains('active')) return;
 
-        const items = e.clipboardData?.items;
+        const items = event.clipboardData?.items;
         if (!items) return;
+
         for (const item of items) {
             if (item.type.startsWith('image/')) {
-                e.preventDefault();
-                setImageFile(item.getAsFile());
+                event.preventDefault();
+                const file = item.getAsFile();
+                if (file) {
+                    setImageFiles([file]);
+                }
                 return;
             }
         }
     });
 }
 
-function setImageFile(file) {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-        showNotification('Image exceeds 10MB limit', 'error');
-        return;
-    }
-    selectedImageFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const zone = document.getElementById('image-upload-zone');
-        const previewWrap = document.getElementById('image-preview-wrap');
-        document.getElementById('image-preview').src = e.target.result;
-        previewWrap.classList.add('show');
-        zone.classList.add('has-image');
-    };
-    reader.readAsDataURL(file);
+function initVideoUpload() {
+    const zone = document.getElementById('video-upload-zone');
+    const fileInput = document.getElementById('product-video');
+    const removeBtn = document.getElementById('video-remove-btn');
+
+    fileInput.addEventListener('change', (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setVideoFile(file);
+        }
+    });
+
+    removeBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        clearVideoSelection(true);
+    });
+
+    zone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        zone.classList.add('dragover');
+    });
+
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+
+    zone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        zone.classList.remove('dragover');
+        const file = Array.from(event.dataTransfer.files || []).find(candidate => candidate.type.startsWith('video/'));
+        if (file) {
+            setVideoFile(file);
+        }
+    });
 }
 
-function clearImageSelection() {
-    selectedImageFile = null;
+function setImageFiles(files) {
+    const validFiles = files.filter(file => validateImageFile(file));
+    if (validFiles.length === 0) {
+        return;
+    }
+
+    selectedImageFiles = validFiles;
+    renderImagePreview(validFiles, true);
+}
+
+function clearImageSelection(showExistingMedia) {
+    revokeImagePreviewUrls();
+    selectedImageFiles = [];
+    document.getElementById('product-images').value = '';
+    renderImagePreview(showExistingMedia ? existingImageUrls : [], false);
+}
+
+function setVideoFile(file) {
+    if (!validateVideoFile(file)) {
+        return;
+    }
+
+    selectedVideoFile = file;
+    renderVideoPreview(file, true);
+}
+
+function clearVideoSelection(showExistingMedia) {
+    revokeVideoPreviewUrl();
+    selectedVideoFile = null;
+    document.getElementById('product-video').value = '';
+    renderVideoPreview(showExistingMedia ? existingVideoUrl : '', false);
+}
+
+function validateImageFile(file) {
+    if (!file.type.startsWith('image/')) {
+        showNotification('Only image files are supported', 'error');
+        return false;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+        showNotification('Each image must be 10MB or smaller', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateVideoFile(file) {
+    if (!file.type.startsWith('video/')) {
+        showNotification('Only video files are supported', 'error');
+        return false;
+    }
+    if (file.size > MAX_VIDEO_SIZE) {
+        showNotification('Video must be 100MB or smaller', 'error');
+        return false;
+    }
+    return true;
+}
+
+function renderImagePreview(items, fromFiles) {
     const zone = document.getElementById('image-upload-zone');
     const previewWrap = document.getElementById('image-preview-wrap');
-    document.getElementById('product-image').value = '';
-    document.getElementById('image-preview').src = '';
-    previewWrap.classList.remove('show');
-    zone.classList.remove('has-image');
+    const previewList = document.getElementById('image-preview-list');
+    const removeBtn = document.getElementById('image-remove-btn');
+
+    revokeImagePreviewUrls();
+
+    if (!items || items.length === 0) {
+        previewList.innerHTML = '';
+        previewWrap.classList.remove('show');
+        zone.classList.remove('has-image');
+        removeBtn.style.display = 'none';
+        return;
+    }
+
+    const previewUrls = fromFiles
+        ? items.map(file => {
+            const url = URL.createObjectURL(file);
+            imagePreviewObjectUrls.push(url);
+            return { url, label: file.name };
+        })
+        : items.map((url, index) => ({
+            url,
+            label: index === 0 ? 'Current cover' : `Current image ${index + 1}`
+        }));
+
+    previewList.innerHTML = previewUrls.map((item, index) => `
+        <div class="image-preview-card ${index === 0 ? 'is-cover' : ''}">
+            <img src="${item.url}" alt="Product preview ${index + 1}">
+            <span>${index === 0 ? 'Cover' : `Image ${index + 1}`}</span>
+        </div>
+    `).join('');
+
+    previewWrap.classList.add('show');
+    zone.classList.add('has-image');
+    removeBtn.style.display = fromFiles ? 'flex' : 'none';
+}
+
+function renderVideoPreview(videoSource, fromFile) {
+    const zone = document.getElementById('video-upload-zone');
+    const previewWrap = document.getElementById('video-preview-wrap');
+    const preview = document.getElementById('video-preview');
+    const nameEl = document.getElementById('video-preview-name');
+    const removeBtn = document.getElementById('video-remove-btn');
+
+    revokeVideoPreviewUrl();
+
+    if (!videoSource) {
+        preview.removeAttribute('src');
+        preview.load();
+        nameEl.textContent = '';
+        previewWrap.classList.remove('show');
+        zone.classList.remove('has-image');
+        removeBtn.style.display = 'none';
+        return;
+    }
+
+    const src = fromFile ? URL.createObjectURL(videoSource) : videoSource;
+    if (fromFile) {
+        videoPreviewObjectUrl = src;
+    }
+
+    preview.src = src;
+    preview.load();
+    nameEl.textContent = fromFile ? videoSource.name : 'Current product video';
+    previewWrap.classList.add('show');
+    zone.classList.add('has-image');
+    removeBtn.style.display = fromFile ? 'flex' : 'none';
+}
+
+function revokeImagePreviewUrls() {
+    imagePreviewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+    imagePreviewObjectUrls = [];
+}
+
+function revokeVideoPreviewUrl() {
+    if (videoPreviewObjectUrl) {
+        URL.revokeObjectURL(videoPreviewObjectUrl);
+        videoPreviewObjectUrl = '';
+    }
 }
 
 function switchSection(section) {
@@ -107,7 +274,6 @@ function switchSection(section) {
     document.getElementById(`${section}-section`).classList.add('active');
 }
 
-// Categories Management
 async function loadCategories() {
     try {
         const response = await fetch(`${API_BASE_URL}/categories`);
@@ -149,8 +315,8 @@ function updateCategoryDropdown() {
         categories.map(cat => `<option value="${cat.catid}">${cat.name}</option>`).join('');
 }
 
-async function handleCategorySubmit(e) {
-    e.preventDefault();
+async function handleCategorySubmit(event) {
+    event.preventDefault();
     
     const id = document.getElementById('category-id').value;
     const name = document.getElementById('category-name').value;
@@ -160,15 +326,13 @@ async function handleCategorySubmit(e) {
     try {
         let response;
         if (id) {
-            // Update
-            categoryData.catid = parseInt(id);
+            categoryData.catid = parseInt(id, 10);
             response = await fetch(`${API_BASE_URL}/categories/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(categoryData)
             });
         } else {
-            // Create
             response = await fetch(`${API_BASE_URL}/categories`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -219,7 +383,6 @@ function resetCategoryForm() {
     document.getElementById('category-id').value = '';
 }
 
-// Products Management
 async function loadProducts() {
     try {
         const response = await fetch(`${API_BASE_URL}/products`);
@@ -243,8 +406,8 @@ function renderProductsTable() {
     }
 
     tbody.innerHTML = products.map(product => {
-        const w = product.weight || 0;
-        const badgeClass = w >= 100 ? 'top' : w >= 50 ? 'high' : '';
+        const weight = product.weight || 0;
+        const badgeClass = weight >= 100 ? 'top' : weight >= 50 ? 'high' : '';
         return `
         <tr>
             <td>${product.pid}</td>
@@ -254,9 +417,9 @@ function renderProductsTable() {
             <td>${product.stockQuantity || 0}</td>
             <td>
                 <div class="weight-cell">
-                    <span class="weight-badge ${badgeClass}" id="weight-badge-${product.pid}">${w}</span>
+                    <span class="weight-badge ${badgeClass}" id="weight-badge-${product.pid}">${weight}</span>
                     <input type="number" class="weight-input" id="weight-input-${product.pid}"
-                           value="${w}" min="0" max="9999" style="display:none">
+                           value="${weight}" min="0" max="9999" style="display:none">
                     <button class="btn-weight-save" id="weight-edit-btn-${product.pid}"
                             onclick="toggleWeightEdit(${product.pid})" title="Edit weight">✏️</button>
                     <button class="btn-weight-save" id="weight-save-btn-${product.pid}"
@@ -295,7 +458,7 @@ function toggleWeightEdit(pid) {
 
 async function saveWeight(pid) {
     const input = document.getElementById(`weight-input-${pid}`);
-    const weight = parseInt(input.value) || 0;
+    const weight = parseInt(input.value, 10) || 0;
 
     try {
         const response = await fetch(`${API_BASE_URL}/products/${pid}/weight`, {
@@ -307,18 +470,17 @@ async function saveWeight(pid) {
         if (!response.ok) throw new Error('Failed to update weight');
 
         const updated = await response.json();
-        const p = products.find(p => p.pid === pid);
-        if (p) p.weight = updated.weight;
+        const product = products.find(item => item.pid === pid);
+        if (product) product.weight = updated.weight;
 
         const badge = document.getElementById(`weight-badge-${pid}`);
-        const w = updated.weight || 0;
-        badge.textContent = w;
-        badge.className = 'weight-badge' + (w >= 100 ? ' top' : w >= 50 ? ' high' : '');
+        const nextWeight = updated.weight || 0;
+        badge.textContent = nextWeight;
+        badge.className = 'weight-badge' + (nextWeight >= 100 ? ' top' : nextWeight >= 50 ? ' high' : '');
 
         toggleWeightEdit(pid);
-        showNotification(`Weight updated to ${w}`);
+        showNotification(`Weight updated to ${nextWeight}`);
 
-        // Re-sort table by weight
         products.sort((a, b) => (b.weight || 0) - (a.weight || 0) || a.pid - b.pid);
         renderProductsTable();
     } catch (error) {
@@ -326,23 +488,22 @@ async function saveWeight(pid) {
     }
 }
 
-async function handleProductSubmit(e) {
-    e.preventDefault();
+async function handleProductSubmit(event) {
+    event.preventDefault();
     
     const id = document.getElementById('product-id').value;
     const categoryId = document.getElementById('product-category').value;
     const name = document.getElementById('product-name').value;
     const price = parseFloat(document.getElementById('product-price').value);
     const description = document.getElementById('product-description').value;
-    const stockQuantity = parseInt(document.getElementById('product-stock').value) || 0;
-    const weight = parseInt(document.getElementById('product-weight').value) || 0;
-    const imageFile = selectedImageFile || document.getElementById('product-image').files[0];
+    const stockQuantity = parseInt(document.getElementById('product-stock').value, 10) || 0;
+    const weight = parseInt(document.getElementById('product-weight').value, 10) || 0;
+    const hasNewMedia = selectedImageFiles.length > 0 || !!selectedVideoFile;
 
     try {
         let response;
 
-        // If image file is provided, use multipart/form-data
-        if (imageFile) {
+        if (hasNewMedia) {
             const formData = new FormData();
             formData.append('catid', categoryId);
             formData.append('name', name);
@@ -350,25 +511,18 @@ async function handleProductSubmit(e) {
             formData.append('description', description);
             formData.append('stockQuantity', stockQuantity);
             formData.append('weight', weight);
-            formData.append('image', imageFile);
-            
-            if (id) {
-                // Update with image
-                response = await fetch(`${API_BASE_URL}/products/${id}/upload`, {
-                    method: 'PUT',
-                    body: formData
-                });
-            } else {
-                // Create with image
-                response = await fetch(`${API_BASE_URL}/products/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
+            selectedImageFiles.forEach(file => formData.append('images', file));
+            if (selectedVideoFile) {
+                formData.append('video', selectedVideoFile);
             }
+
+            response = await fetch(`${API_BASE_URL}/products${id ? `/${id}/upload` : '/upload'}`, {
+                method: id ? 'PUT' : 'POST',
+                body: formData
+            });
         } else {
-            // Use JSON without file upload
             const productData = {
-                category: { catid: parseInt(categoryId) },
+                category: { catid: parseInt(categoryId, 10) },
                 name,
                 price,
                 description,
@@ -378,15 +532,13 @@ async function handleProductSubmit(e) {
             };
             
             if (id) {
-                productData.pid = parseInt(id);
-                // Update
+                productData.pid = parseInt(id, 10);
                 response = await fetch(`${API_BASE_URL}/products/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(productData)
                 });
             } else {
-                // Create
                 response = await fetch(`${API_BASE_URL}/products`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -410,28 +562,31 @@ async function handleProductSubmit(e) {
 }
 
 function editProduct(id) {
-    const product = products.find(p => p.pid === id);
-    if (product) {
-        document.getElementById('product-id').value = product.pid;
-        document.getElementById('product-category').value = product.category ? product.category.catid : '';
-        document.getElementById('product-name').value = product.name;
-        document.getElementById('product-price').value = product.price;
-        document.getElementById('product-description').value = product.description;
-        document.getElementById('product-stock').value = product.stockQuantity || 0;
-        document.getElementById('product-weight').value = product.weight || 0;
-
-        clearImageSelection();
-        if (product.imageUrl) {
-            const zone = document.getElementById('image-upload-zone');
-            const previewWrap = document.getElementById('image-preview-wrap');
-            document.getElementById('image-preview').src = product.imageUrl;
-            previewWrap.classList.add('show');
-            zone.classList.add('has-image');
-        }
-
-        switchSection('products');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const product = products.find(item => item.pid === id);
+    if (!product) {
+        return;
     }
+
+    document.getElementById('product-id').value = product.pid;
+    document.getElementById('product-category').value = product.category ? product.category.catid : '';
+    document.getElementById('product-name').value = product.name;
+    document.getElementById('product-price').value = product.price;
+    document.getElementById('product-description').value = product.description;
+    document.getElementById('product-stock').value = product.stockQuantity || 0;
+    document.getElementById('product-weight').value = product.weight || 0;
+
+    selectedImageFiles = [];
+    selectedVideoFile = null;
+    document.getElementById('product-images').value = '';
+    document.getElementById('product-video').value = '';
+
+    existingImageUrls = getProductGalleryImages(product);
+    existingVideoUrl = product.videoUrl || '';
+    renderImagePreview(existingImageUrls, false);
+    renderVideoPreview(existingVideoUrl, false);
+
+    switchSection('products');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function deleteProduct(id) {
@@ -455,10 +610,40 @@ async function deleteProduct(id) {
 function resetProductForm() {
     document.getElementById('product-form').reset();
     document.getElementById('product-id').value = '';
-    clearImageSelection();
+    existingImageUrls = [];
+    existingVideoUrl = '';
+    clearImageSelection(false);
+    clearVideoSelection(false);
 }
 
-// Utility functions
+function getProductGalleryImages(product) {
+    const galleryImages = splitMediaCsv(product.galleryImageUrls);
+    const thumbnailImages = splitMediaCsv(product.thumbnailUrls);
+
+    if (galleryImages.length > 1) {
+        return galleryImages;
+    }
+    if (galleryImages.length <= 1 && thumbnailImages.length > galleryImages.length) {
+        return thumbnailImages;
+    }
+    if (galleryImages.length === 1) {
+        return galleryImages;
+    }
+    if (thumbnailImages.length > 0) {
+        return thumbnailImages;
+    }
+    return product.imageUrl ? [product.imageUrl] : [];
+}
+
+function splitMediaCsv(csv) {
+    if (!csv) {
+        return [];
+    }
+    return csv.split(',')
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
 function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;

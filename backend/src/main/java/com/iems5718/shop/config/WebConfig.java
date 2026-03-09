@@ -12,10 +12,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .maxAge(3600);
         registry.addMapping("/images/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET")
+                .maxAge(86400);
+        registry.addMapping("/videos/**")
                 .allowedOrigins("*")
                 .allowedMethods("GET")
                 .maxAge(86400);
@@ -25,5 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("file:../images/");
+        registry.addResourceHandler("/videos/**")
+                .addResourceLocations("file:../videos/");
     }
 }

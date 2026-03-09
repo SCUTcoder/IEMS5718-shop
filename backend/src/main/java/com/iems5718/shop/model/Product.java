@@ -35,8 +35,14 @@ public class Product {
     @Column(name = "image_url")
     private String imageUrl;
     
-    @Column(name = "thumbnail_urls", length = 1000)
+    @Column(name = "thumbnail_urls", length = 4000)
     private String thumbnailUrls;
+
+    @Column(name = "gallery_image_urls", length = 4000)
+    private String galleryImageUrls;
+
+    @Column(name = "video_url", length = 1000)
+    private String videoUrl;
     
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
