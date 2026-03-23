@@ -1,9 +1,11 @@
-const API_BASE_URL = (window.location.protocol === 'file:' ||
-                     window.location.hostname === 'localhost' ||
-                     window.location.hostname === '127.0.0.1' ||
-                     window.location.hostname === '')
-    ? 'http://localhost:8080/api'
-    : window.location.origin + '/api';
+const API_BASE_URL = window.shopAuth ? window.shopAuth.API_BASE_URL : (
+    (window.location.protocol === 'file:' ||
+     window.location.hostname === 'localhost' ||
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname === '')
+        ? 'http://localhost:8080/api'
+        : window.location.origin + '/api'
+);
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
@@ -19,7 +21,18 @@ let selectedVideoFile = null;
 let videoPreviewObjectUrl = '';
 let tempImageId = 0;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    const user = await window.shopAuth.loadCurrentUser();
+    if (!user.authenticated) {
+        window.location.href = 'login.html';
+        return;
+    }
+    if (!user.admin) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    await window.shopAuth.initializeHeaderAuth();
     loadCategories();
     loadProducts();
 
@@ -237,7 +250,7 @@ function renderImagePreview() {
                 <button type="button" class="image-preview-item-remove" data-image-id="${item.id}" title="Remove this photo">×</button>
                 <span class="image-preview-status">${item.source === 'new' ? 'New' : 'Current'}</span>
                 <div class="image-preview-media">
-                    <img src="${previewSrc}" alt="Product preview ${index + 1}">
+                    <img src="${escapeHtml(previewSrc)}" alt="Product preview ${index + 1}">
                 </div>
                 <div class="image-preview-card-body">
                     <div class="image-preview-card-title">${escapeHtml(title)}</div>
@@ -335,7 +348,7 @@ function switchSection(section) {
 
 async function loadCategories() {
     try {
-        const response = await fetch(`${API_BASE_URL}/categories`);
+        const response = await window.shopAuth.authFetch(`${API_BASE_URL}/categories`);
         if (!response.ok) throw new Error('Failed to fetch categories');
 
         categories = await response.json();
@@ -359,7 +372,7 @@ function renderCategoriesTable() {
     tbody.innerHTML = categories.map(cat => `
         <tr>
             <td>${cat.catid}</td>
-            <td>${cat.name}</td>
+            <td>${escapeHtml(cat.name)}</td>
             <td class="action-buttons">
                 <button class="btn-edit" onclick="editCategory(${cat.catid})">Edit</button>
                 <button class="btn-delete" onclick="deleteCategory(${cat.catid})">Delete</button>
@@ -385,13 +398,13 @@ async function handleCategorySubmit(event) {
         let response;
         if (id) {
             categoryData.catid = parseInt(id, 10);
-            response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+            response = await window.shopAuth.authFetch(`${API_BASE_URL}/categories/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(categoryData)
             });
         } else {
-            response = await fetch(`${API_BASE_URL}/categories`, {
+            response = await window.shopAuth.authFetch(`${API_BASE_URL}/categories`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(categoryData)
@@ -422,7 +435,7 @@ async function deleteCategory(id) {
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+        const response = await window.shopAuth.authFetch(`${API_BASE_URL}/categories/${id}`, {
             method: 'DELETE'
         });
 
@@ -443,7 +456,7 @@ function resetCategoryForm() {
 
 async function loadProducts() {
     try {
-        const response = await fetch(`${API_BASE_URL}/products`);
+        const response = await window.shopAuth.authFetch(`${API_BASE_URL}/products`);
         if (!response.ok) throw new Error('Failed to fetch products');
 
         products = await response.json();
@@ -469,8 +482,8 @@ function renderProductsTable() {
         return `
         <tr>
             <td>${product.pid}</td>
-            <td>${product.name}</td>
-            <td>${product.category ? product.category.name : 'N/A'}</td>
+            <td>${escapeHtml(product.name)}</td>
+            <td>${escapeHtml(product.category ? product.category.name : 'N/A')}</td>
             <td>$${product.price.toFixed(2)}</td>
             <td>${product.stockQuantity || 0}</td>
             <td>
@@ -520,7 +533,7 @@ async function saveWeight(pid) {
     const weight = parseInt(input.value, 10) || 0;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/products/${pid}/weight`, {
+        const response = await window.shopAuth.authFetch(`${API_BASE_URL}/products/${pid}/weight`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ weight })
@@ -590,7 +603,7 @@ async function handleProductSubmit(event) {
                 formData.append('clearVideo', String(shouldClearVideo()));
             }
 
-            response = await fetch(`${API_BASE_URL}/products${id ? `/${id}/upload` : '/upload'}`, {
+            response = await window.shopAuth.authFetch(`${API_BASE_URL}/products${id ? `/${id}/upload` : '/upload'}`, {
                 method: id ? 'PUT' : 'POST',
                 body: formData
             });
@@ -607,13 +620,13 @@ async function handleProductSubmit(event) {
 
             if (id) {
                 productData.pid = parseInt(id, 10);
-                response = await fetch(`${API_BASE_URL}/products/${id}`, {
+                response = await window.shopAuth.authFetch(`${API_BASE_URL}/products/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(productData)
                 });
             } else {
-                response = await fetch(`${API_BASE_URL}/products`, {
+                response = await window.shopAuth.authFetch(`${API_BASE_URL}/products`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(productData)
@@ -666,7 +679,7 @@ async function deleteProduct(id) {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+        const response = await window.shopAuth.authFetch(`${API_BASE_URL}/products/${id}`, {
             method: 'DELETE'
         });
 
@@ -781,21 +794,9 @@ function splitMediaCsv(csv) {
 }
 
 function escapeHtml(value) {
-    return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
+    return window.shopAuth.escapeHtml(value);
 }
 
 function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+    window.shopAuth.showNotification(message, type);
 }

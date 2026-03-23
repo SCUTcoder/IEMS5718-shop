@@ -2,20 +2,28 @@ package com.iems5718.shop.config;
 
 import com.iems5718.shop.model.Category;
 import com.iems5718.shop.model.Product;
+import com.iems5718.shop.model.User;
 import com.iems5718.shop.repository.CategoryRepository;
 import com.iems5718.shop.repository.ProductRepository;
+import com.iems5718.shop.repository.UserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder(12);
     
     @Autowired
     private ProductRepository productRepository;
     
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private UserRepository userRepository;
     
     @Override
     public void run(String... args) throws Exception {
@@ -112,5 +120,24 @@ public class DataInitializer implements CommandLineRunner {
         } else {
             System.out.println("Database already contains data. Skipping initialization.");
         }
+
+        ensureDefaultUsers();
+    }
+
+    private void ensureDefaultUsers() {
+        createUserIfMissing("admin@shop.local", "Admin User", "Admin@12345", true);
+        createUserIfMissing("user@shop.local", "Normal User", "User@12345", false);
+    }
+
+    private void createUserIfMissing(String email, String displayName, String password, boolean admin) {
+        if (userRepository.existsByEmail(email)) {
+            return;
+        }
+        User user = new User();
+        user.setEmail(email);
+        user.setDisplayName(displayName);
+        user.setPasswordHash(PASSWORD_ENCODER.encode(password));
+        user.setAdmin(admin);
+        userRepository.save(user);
     }
 }

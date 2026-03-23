@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://localhost:8080; form-action 'self'; base-uri 'self'; object-src 'none'">
+    <title>Login - 章程's Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+    <main class="auth-card">
+        <a href="index.html" class="header-link-btn" style="margin-bottom:20px;">Back to Shop</a>
+        <h1>Welcome back</h1>
+        <p>Sign in to manage products, change your password, or continue as a registered shopper.</p>
+        <form class="auth-form" id="login-form">
+            <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" maxlength="255" autocomplete="email" required>
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="current-password" required>
+            </div>
+            <button class="auth-submit" type="submit">Login</button>
+            <div class="auth-message" id="auth-message"></div>
+        </form>
+        <p style="margin-top:18px;margin-bottom:0;">No account yet? <a href="register.html">Create one here</a>.</p>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const form = document.getElementById('login-form');
+        const messageEl = document.getElementById('auth-message');
+
+        shopAuth.ensureCsrfToken();
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            messageEl.textContent = '';
+            messageEl.className = 'auth-message';
+
+            const payload = {
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value
+            };
+
+            const response = await shopAuth.authFetch(`${shopAuth.API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                messageEl.textContent = body.message || 'Login failed';
+                messageEl.classList.add('error');
+                return;
+            }
+
+            messageEl.textContent = 'Login successful. Redirecting...';
+            messageEl.classList.add('success');
+            window.location.href = body.admin ? 'admin.html' : 'index.html';
+        });
+    </script>
+</body>
+</html>

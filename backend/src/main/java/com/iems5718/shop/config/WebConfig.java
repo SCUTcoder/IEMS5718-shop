@@ -7,24 +7,25 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("*")
+                .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8080", "http://127.0.0.1:8080")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
+                .allowedHeaders("Content-Type", "X-CSRF-Token")
+                .allowCredentials(true)
                 .maxAge(3600);
         registry.addMapping("/images/**")
-                .allowedOrigins("*")
+                .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8080", "http://127.0.0.1:8080")
                 .allowedMethods("GET")
                 .maxAge(86400);
         registry.addMapping("/videos/**")
-                .allowedOrigins("*")
+                .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8080", "http://127.0.0.1:8080")
                 .allowedMethods("GET")
                 .maxAge(86400);
     }
-    
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/**")

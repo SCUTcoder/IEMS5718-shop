@@ -4,6 +4,7 @@ import com.iems5718.shop.model.Category;
 import com.iems5718.shop.model.Product;
 import com.iems5718.shop.repository.CategoryRepository;
 import com.iems5718.shop.repository.ProductRepository;
+import com.iems5718.shop.util.InputSanitizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,6 +47,9 @@ public class ProductService {
     }
 
     public Product updateWeight(Long id, Integer weight) {
+        if (weight == null || weight < 0 || weight > 9999) {
+            throw new IllegalArgumentException("Weight must be between 0 and 9999");
+        }
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         product.setWeight(weight);
@@ -53,6 +57,7 @@ public class ProductService {
     }
     
     public Product createProduct(Product product) {
+        sanitizeProduct(product);
         // Ensure category is loaded
         if (product.getCategory() != null && product.getCategory().getCatid() != null) {
             Category category = categoryRepository.findById(product.getCategory().getCatid())
@@ -66,7 +71,9 @@ public class ProductService {
     public Product updateProduct(Long id, Product productDetails) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        
+
+        sanitizeProduct(productDetails);
+
         product.setName(productDetails.getName());
         product.setDescription(productDetails.getDescription());
         product.setPrice(productDetails.getPrice());
@@ -112,14 +119,15 @@ public class ProductService {
     public Product createProductWithImage(Long catid, String name, Double price, String description,
                                          Integer stockQuantity, Integer weight, MultipartFile[] images,
                                          MultipartFile video) throws Exception {
+        validateProductFields(name, price, description, stockQuantity, weight);
         Category category = categoryRepository.findById(catid)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
         Product product = new Product();
         product.setCategory(category);
-        product.setName(name);
+        product.setName(InputSanitizer.requireText(name, 120, "Product name"));
         product.setPrice(price);
-        product.setDescription(description);
+        product.setDescription(InputSanitizer.requireText(description, 1000, "Description"));
         product.setStockQuantity(stockQuantity);
         product.setWeight(weight != null ? weight : 0);
         product.setActive(true);
@@ -148,11 +156,20 @@ public class ProductService {
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
         }
-        if (name != null) product.setName(name);
-        if (price != null) product.setPrice(price);
-        if (description != null) product.setDescription(description);
-        if (stockQuantity != null) product.setStockQuantity(stockQuantity);
-        if (weight != null) product.setWeight(weight);
+        if (name != null) product.setName(InputSanitizer.requireText(name, 120, "Product name"));
+        if (price != null) {
+            validatePrice(price);
+            product.setPrice(price);
+        }
+        if (description != null) product.setDescription(InputSanitizer.requireText(description, 1000, "Description"));
+        if (stockQuantity != null) {
+            validateStock(stockQuantity);
+            product.setStockQuantity(stockQuantity);
+        }
+        if (weight != null) {
+            validateWeight(weight);
+            product.setWeight(weight);
+        }
         
         applyUpdatedMedia(product, images, video, replaceImages, retainedGalleryImageUrls, retainedThumbnailUrls, clearVideo);
         syncProductMedia(product);
@@ -348,5 +365,42 @@ public class ProductService {
         }
 
         return values;
+    }
+
+    private void sanitizeProduct(Product product) {
+        product.setName(InputSanitizer.requireText(product.getName(), 120, "Product name"));
+        product.setDescription(InputSanitizer.requireText(product.getDescription(), 1000, "Description"));
+        validatePrice(product.getPrice());
+        validateStock(product.getStockQuantity());
+        validateWeight(product.getWeight() == null ? 0 : product.getWeight());
+        product.setWeight(product.getWeight() == null ? 0 : product.getWeight());
+        product.setStockQuantity(product.getStockQuantity() == null ? 0 : product.getStockQuantity());
+    }
+
+    private void validateProductFields(String name, Double price, String description, Integer stockQuantity, Integer weight) {
+        InputSanitizer.requireText(name, 120, "Product name");
+        InputSanitizer.requireText(description, 1000, "Description");
+        validatePrice(price);
+        validateStock(stockQuantity);
+        validateWeight(weight == null ? 0 : weight);
+    }
+
+    private void validatePrice(Double price) {
+        if (price == null || price < 0 || price > 1_000_000) {
+            throw new IllegalArgumentException("Price must be between 0 and 1000000");
+        }
+    }
+
+    private void validateStock(Integer stockQuantity) {
+        int safeStock = stockQuantity == null ? 0 : stockQuantity;
+        if (safeStock < 0 || safeStock > 100000) {
+            throw new IllegalArgumentException("Stock quantity must be between 0 and 100000");
+        }
+    }
+
+    private void validateWeight(Integer weight) {
+        if (weight < 0 || weight > 9999) {
+            throw new IllegalArgumentException("Weight must be between 0 and 9999");
+        }
     }
 }

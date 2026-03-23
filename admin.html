@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8080; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>Admin Panel - 章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -511,6 +512,11 @@
 <body>
     <div class="admin-container">
         <a href="index.html" class="admin-back">← Back to Shop</a>
+        <div class="header-actions" style="justify-content:flex-end; margin-bottom:16px;">
+            <div class="user-chip" id="header-user-name"><small>Signed in as</small> Guest</div>
+            <a href="change-password.html" class="header-link-btn" id="change-password-link" style="display:none;">Password</a>
+            <button type="button" class="header-link-btn" id="logout-btn" style="display:none;">Logout</button>
+        </div>
 
         <div class="admin-header">
             <h1>Admin Panel</h1>
@@ -656,6 +662,7 @@
         </div>
     </div>
 
+    <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://localhost:8080; form-action 'self'; base-uri 'self'; object-src 'none'">
+    <title>Register - 章程's Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+    <main class="auth-card">
+        <a href="index.html" class="header-link-btn" style="margin-bottom:20px;">Back to Shop</a>
+        <h1>Create account</h1>
+        <p>Register with a unique email address. Password confirmation is checked on both the client and the server.</p>
+        <form class="auth-form" id="register-form">
+            <div>
+                <label for="display-name">Display Name</label>
+                <input id="display-name" name="display-name" type="text" maxlength="80" autocomplete="name" required>
+            </div>
+            <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" maxlength="255" autocomplete="email" required>
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+            </div>
+            <div>
+                <label for="confirm-password">Confirm Password</label>
+                <input id="confirm-password" name="confirm-password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+            </div>
+            <button class="auth-submit" type="submit">Create Account</button>
+            <div class="auth-message" id="auth-message"></div>
+        </form>
+        <p style="margin-top:18px;margin-bottom:0;">Already registered? <a href="login.html">Login here</a>.</p>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const form = document.getElementById('register-form');
+        const messageEl = document.getElementById('auth-message');
+
+        shopAuth.ensureCsrfToken();
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            messageEl.textContent = '';
+            messageEl.className = 'auth-message';
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            if (password !== confirmPassword) {
+                messageEl.textContent = 'Passwords do not match';
+                messageEl.classList.add('error');
+                return;
+            }
+
+            const payload = {
+                displayName: document.getElementById('display-name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                password,
+                confirmPassword
+            };
+
+            const response = await shopAuth.authFetch(`${shopAuth.API_BASE_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                messageEl.textContent = body.message || 'Registration failed';
+                messageEl.classList.add('error');
+                return;
+            }
+
+            messageEl.textContent = 'Registration successful. Redirecting to login...';
+            messageEl.classList.add('success');
+            setTimeout(() => { window.location.href = 'login.html'; }, 900);
+        });
+    </script>
+</body>
+</html>

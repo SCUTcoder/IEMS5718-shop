@@ -24,6 +24,24 @@ CREATE TABLE IF NOT EXISTS products (
     FOREIGN KEY (catid) REFERENCES categories(catid)
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    userid INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    admin_flag INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userid INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    csrf_token TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (userid) REFERENCES users(userid)
+);
+
 -- Insert sample categories
 INSERT INTO categories (name) VALUES ('Electronics');
 INSERT INTO categories (name) VALUES ('Clothing');
@@ -60,3 +78,11 @@ INSERT INTO products (catid, name, price, description, image_url, thumbnail_urls
 VALUES (2, 'Classic Jeans', 79.99, 
         'Classic fit jeans with premium denim fabric. These timeless jeans feature a comfortable fit and durable construction. Perfect for casual wear, these jeans will become a staple in your wardrobe.',
         'images/product2.jpg', 'images/product2.jpg', 'images/product2.jpg', 75, 0, 1);
+
+INSERT INTO users (email, display_name, password_hash, admin_flag)
+SELECT 'admin@shop.local', 'Admin User', '$2a$12$hP5zq8prwDofXMI7K1IrQeGbsBfEFuq3N0hM6RZ6Kj5VnXN0dY4J2', 1
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@shop.local');
+
+INSERT INTO users (email, display_name, password_hash, admin_flag)
+SELECT 'user@shop.local', 'Normal User', '$2a$12$FowuK0l.3bwmv6Jzvg1Mxe2saR7uA8GqI9Gf4bm/FvGV8eK3opgQa', 0
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'user@shop.local');

@@ -2,6 +2,7 @@ package com.iems5718.shop.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -19,22 +20,19 @@ public class GlobalExceptionHandler {
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         body.put("error", "Internal Server Error");
-        body.put("message", "An error occurred");
-        
-        System.err.println("Error: " + ex.getMessage());
-        ex.printStackTrace();
-        
+        body.put("message", "An unexpected error occurred");
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex, WebRequest request) {
+
+    @ExceptionHandler({RuntimeException.class, IllegalArgumentException.class, MethodArgumentNotValidException.class})
+    public ResponseEntity<Map<String, Object>> handleBadRequest(Exception ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", "Bad Request");
-        body.put("message", "Invalid request");
-        
+        body.put("message", ex.getMessage() == null || ex.getMessage().isBlank() ? "Invalid request" : ex.getMessage());
+
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
+
 }

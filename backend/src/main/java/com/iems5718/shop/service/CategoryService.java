@@ -2,6 +2,7 @@ package com.iems5718.shop.service;
 
 import com.iems5718.shop.model.Category;
 import com.iems5718.shop.repository.CategoryRepository;
+import com.iems5718.shop.util.InputSanitizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class CategoryService {
     }
     
     public Category createCategory(Category category) {
+        category.setName(InputSanitizer.requireText(category.getName(), 80, "Category name"));
         if (categoryRepository.existsByName(category.getName())) {
             throw new RuntimeException("Category with name '" + category.getName() + "' already exists");
         }
@@ -42,8 +44,8 @@ public class CategoryService {
             categoryRepository.existsByName(categoryDetails.getName())) {
             throw new RuntimeException("Category with name '" + categoryDetails.getName() + "' already exists");
         }
-        
-        category.setName(categoryDetails.getName());
+
+        category.setName(InputSanitizer.requireText(categoryDetails.getName(), 80, "Category name"));
         return categoryRepository.save(category);
     }
     

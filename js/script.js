@@ -1,14 +1,19 @@
-const API_BASE_URL = (window.location.protocol === 'file:' ||
-                     window.location.hostname === 'localhost' ||
-                     window.location.hostname === '127.0.0.1' ||
-                     window.location.hostname === '')
-    ? 'http://localhost:8080/api'
-    : window.location.origin + '/api';
+const API_BASE_URL = window.shopAuth ? window.shopAuth.API_BASE_URL : (
+    (window.location.protocol === 'file:' ||
+     window.location.hostname === 'localhost' ||
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname === '')
+        ? 'http://localhost:8080/api'
+        : window.location.origin + '/api'
+);
 
 let productsData = {};
 let cart = [];
 
 document.addEventListener('DOMContentLoaded', async function() {
+    if (window.shopAuth) {
+        await window.shopAuth.initializeHeaderAuth();
+    }
     await loadProducts();
 
     cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
@@ -142,14 +147,14 @@ function renderMainProductMedia(mediaItem, productName) {
     }
 
     if (mediaItem.type === 'video') {
-        const posterAttr = mediaItem.thumbnail ? ` poster="${mediaItem.thumbnail}"` : '';
+        const posterAttr = mediaItem.thumbnail ? ` poster="${escapeHtml(mediaItem.thumbnail)}"` : '';
         return `<video controls playsinline preload="metadata"${posterAttr}>
-            <source src="${mediaItem.src}">
+            <source src="${escapeHtml(mediaItem.src)}">
             Your browser does not support the video tag.
         </video>`;
     }
 
-    return `<img src="${mediaItem.src}" alt="${mediaItem.alt || productName}" id="main-product-image">`;
+    return `<img src="${escapeHtml(mediaItem.src)}" alt="${escapeHtml(mediaItem.alt || productName)}" id="main-product-image">`;
 }
 
 function loadProductDetail() {
@@ -174,7 +179,7 @@ function loadProductDetail() {
 
     const breadcrumb = document.getElementById('breadcrumb');
     if (breadcrumb) {
-        breadcrumb.innerHTML = `<a href="index.html">Home</a> &gt; ${catName ? `<a href="index.html">${catName}</a> &gt; ` : ''}<span>${product.name}</span>`;
+        breadcrumb.innerHTML = `<a href="index.html">Home</a> &gt; ${catName ? `<a href="index.html">${escapeHtml(catName)}</a> &gt; ` : ''}<span>${escapeHtml(product.name)}</span>`;
     }
 
     document.title = `${product.name} - 章程's Shop`;
@@ -190,10 +195,10 @@ function loadProductDetail() {
                     <button type="button"
                             class="thumbnail ${index === 0 ? 'active' : ''} ${item.type === 'video' ? 'video-thumbnail' : ''}"
                             data-media-type="${item.type}"
-                            data-media-src="${item.src}"
-                            data-media-thumb="${item.thumbnail || ''}"
+                            data-media-src="${escapeHtml(item.src)}"
+                            data-media-thumb="${escapeHtml(item.thumbnail || '')}"
                             aria-label="${item.type === 'video' ? 'Show product video' : `Show product image ${index + 1}`}">
-                        ${item.thumbnail ? `<img src="${item.thumbnail}" alt="${item.alt}">` : `<span class="thumbnail-fallback">Video</span>`}
+                        ${item.thumbnail ? `<img src="${escapeHtml(item.thumbnail)}" alt="${escapeHtml(item.alt)}">` : `<span class="thumbnail-fallback">Video</span>`}
                         ${item.type === 'video' ? '<span class="thumbnail-badge">Video</span>' : ''}
                     </button>
                 `).join('')}
@@ -201,13 +206,13 @@ function loadProductDetail() {
             ` : ''}
         </div>
         <div class="product-info">
-            ${catName ? `<div class="breadcrumb-text" style="font-size:0.8rem;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:8px">${catName}</div>` : ''}
-            <h1>${product.name}</h1>
+            ${catName ? `<div class="breadcrumb-text" style="font-size:0.8rem;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:8px">${escapeHtml(catName)}</div>` : ''}
+            <h1>${escapeHtml(product.name)}</h1>
             <div class="price">$${product.price.toFixed(2)}</div>
             ${product.videoUrl ? '<div class="media-tag">Includes product video</div>' : ''}
             <div class="description">
                 <h3>Description</h3>
-                <p>${product.description}</p>
+                <p>${escapeHtml(product.description)}</p>
             </div>
             <div class="add-to-cart-section">
                 <button class="btn-add-cart" data-product-id="${pid}" id="detail-add-cart">Add to Cart</button>
@@ -337,9 +342,9 @@ function updateCartDisplay() {
     } else {
         itemsEl.innerHTML = cart.map(item => `
             <div class="cart-item">
-                <img src="${item.image}" alt="${item.name}">
+                <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
                 <div class="cart-item-details">
-                    <h4>${item.name}</h4>
+                    <h4>${escapeHtml(item.name)}</h4>
                     <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
                     <input type="number" class="cart-item-quantity" value="${item.quantity}" min="1" data-product-id="${item.id}">
                 </div>
@@ -367,6 +372,10 @@ function updateCartDisplay() {
 }
 
 function showNotification(message) {
+    if (window.shopAuth) {
+        window.shopAuth.showNotification(message);
+        return;
+    }
     const el = document.createElement('div');
     el.className = 'notification slide-in';
     el.textContent = message;
@@ -376,4 +385,8 @@ function showNotification(message) {
         el.classList.add('slide-out');
         setTimeout(() => el.remove(), 300);
     }, 2500);
+}
+
+function escapeHtml(value) {
+    return window.shopAuth ? window.shopAuth.escapeHtml(value) : String(value ?? '');
 }

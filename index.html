@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8080; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -14,17 +15,25 @@
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
             </ul>
-            <div class="cart-container">
-                <div class="cart-icon" id="cart-toggle">
-                    🛒 <span class="cart-count" id="cart-count">0</span>
-                </div>
-                <div class="cart-dropdown">
-                    <div class="cart-dropdown-header">Shopping Cart</div>
-                    <div class="cart-items" id="cart-items">
-                        <p class="empty-cart">Your cart is empty</p>
+            <div class="header-actions">
+                <div class="user-chip" id="header-user-name"><small>Signed in as</small> Guest</div>
+                <a href="admin.html" class="header-link-btn" id="admin-link" style="display:none;">Admin</a>
+                <a href="change-password.html" class="header-link-btn" id="change-password-link" style="display:none;">Password</a>
+                <a href="login.html" class="header-link-btn" id="login-link">Login</a>
+                <a href="register.html" class="header-link-btn primary" id="register-link">Register</a>
+                <button type="button" class="header-link-btn" id="logout-btn" style="display:none;">Logout</button>
+                <div class="cart-container">
+                    <div class="cart-icon" id="cart-toggle">
+                        🛒 <span class="cart-count" id="cart-count">0</span>
                     </div>
-                    <div class="cart-dropdown-footer">
-                        <button class="checkout-btn" id="checkout-btn" disabled>Checkout</button>
+                    <div class="cart-dropdown">
+                        <div class="cart-dropdown-header">Shopping Cart</div>
+                        <div class="cart-items" id="cart-items">
+                            <p class="empty-cart">Your cart is empty</p>
+                        </div>
+                        <div class="cart-dropdown-footer">
+                            <button class="checkout-btn" id="checkout-btn" disabled>Checkout</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -67,13 +76,9 @@
         <p>&copy; 2025 IEMS5718 Shop by 章程. All rights reserved.</p>
     </footer>
 
+    <script src="js/auth.js"></script>
     <script>
-    const API_BASE_URL = (window.location.protocol === 'file:' ||
-                         window.location.hostname === 'localhost' ||
-                         window.location.hostname === '127.0.0.1' ||
-                         window.location.hostname === '')
-        ? 'http://localhost:8080/api'
-        : window.location.origin + '/api';
+    const API_BASE_URL = shopAuth.API_BASE_URL;
 
     let cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
     let productsData = {};
@@ -84,6 +89,7 @@
 
     // ==================== Init ====================
     document.addEventListener('DOMContentLoaded', async () => {
+        await shopAuth.initializeHeaderAuth();
         await Promise.all([loadCategories(), loadProducts()]);
         updateCartDisplay();
         initCartToggle();
@@ -203,22 +209,25 @@
     function createProductCard(product, query) {
         const id = product.pid || product.id;
         const catName = product.category ? (product.category.name || product.category) : '';
-        const name = query ? highlightText(product.name, query) : product.name;
-        const desc = query ? highlightText(product.description || '', query) : (product.description || '');
+        const safeName = escapeHtml(product.name || '');
+        const safeDesc = escapeHtml(product.description || '');
+        const safeCatName = escapeHtml(catName);
+        const name = query ? highlightText(safeName, query) : safeName;
+        const desc = query ? highlightText(safeDesc, query) : safeDesc;
         const primaryMedia = getPrimaryCardMedia(product);
 
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
-            <a href="product.html?id=${id}" class="product-card-image">
+            <a href="product.html?id=${encodeURIComponent(id)}" class="product-card-image">
                 ${primaryMedia.type === 'video'
-                    ? `<video src="${primaryMedia.src}" muted autoplay loop playsinline preload="metadata"></video>`
-                    : `<img src="${primaryMedia.src}" alt="${product.name}" loading="lazy">`
+                    ? `<video src="${escapeHtml(primaryMedia.src)}" muted autoplay loop playsinline preload="metadata"></video>`
+                    : `<img src="${escapeHtml(primaryMedia.src)}" alt="${safeName}" loading="lazy">`
                 }
             </a>
             <div class="product-card-body">
-                ${catName ? `<div class="product-card-category">${catName}</div>` : ''}
-                <h3><a href="product.html?id=${id}">${name}</a></h3>
+                ${safeCatName ? `<div class="product-card-category">${safeCatName}</div>` : ''}
+                <h3><a href="product.html?id=${encodeURIComponent(id)}">${name}</a></h3>
                 <p class="product-card-desc">${desc}</p>
                 <div class="product-card-footer">
                     <span class="price">$${product.price.toFixed(2)}</span>
@@ -245,6 +254,10 @@
         if (!query || !text) return text;
         const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="highlight">$1</mark>');
+    }
+
+    function escapeHtml(value) {
+        return shopAuth.escapeHtml(value);
     }
 
     function initAddToCartButtons() {
@@ -358,9 +371,9 @@
         } else {
             itemsEl.innerHTML = cart.map(item => `
                 <div class="cart-item">
-                    <img src="${item.image}" alt="${item.name}">
+                    <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
                     <div class="cart-item-details">
-                        <h4>${item.name}</h4>
+                        <h4>${escapeHtml(item.name)}</h4>
                         <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
                         <input type="number" class="cart-item-quantity" value="${item.quantity}" min="1" data-product-id="${item.id}">
                     </div>
@@ -442,15 +455,7 @@
     }
 
     function showNotification(message) {
-        const el = document.createElement('div');
-        el.className = 'notification slide-in';
-        el.textContent = message;
-        document.body.appendChild(el);
-        setTimeout(() => {
-            el.classList.remove('slide-in');
-            el.classList.add('slide-out');
-            setTimeout(() => el.remove(), 300);
-        }, 2500);
+        shopAuth.showNotification(message);
     }
     </script>
 </body>
