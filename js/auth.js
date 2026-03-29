@@ -5,6 +5,57 @@ window.__SHOP_API_BASE_URL = (window.location.protocol === 'file:' ||
     ? 'http://localhost:8080/api'
     : `${window.location.origin}/api`;
 
+// ── Local auth helpers (used when backend auth is unavailable) ──────────────
+
+const LOCAL_USERS_KEY  = 'iems5718_local_users';
+const LOCAL_SESSION_KEY = 'iems5718_local_session';
+
+function getLocalUsers() {
+    try { return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY)) || []; }
+    catch { return []; }
+}
+
+function saveLocalUsers(users) {
+    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+}
+
+function getLocalSession() {
+    try { return JSON.parse(localStorage.getItem(LOCAL_SESSION_KEY)) || null; }
+    catch { return null; }
+}
+
+function setLocalSession(user) {
+    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(user));
+}
+
+function clearLocalSession() {
+    localStorage.removeItem(LOCAL_SESSION_KEY);
+}
+
+/** Register a user locally. Returns {ok, message}. */
+function localRegister(displayName, email, password) {
+    const users = getLocalUsers();
+    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+        return { ok: false, message: 'Email is already registered.' };
+    }
+    users.push({ displayName, email: email.toLowerCase(), password });
+    saveLocalUsers(users);
+    setLocalSession({ displayName, email: email.toLowerCase(), authenticated: true, admin: false });
+    return { ok: true };
+}
+
+/** Login a user locally. Returns {ok, user?, message}. */
+function localLogin(email, password) {
+    const users = getLocalUsers();
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+    if (!user) {
+        return { ok: false, message: 'Incorrect email or password.' };
+    }
+    const session = { displayName: user.displayName, email: user.email, authenticated: true, admin: false };
+    setLocalSession(session);
+    return { ok: true, user: session };
+}
+
 function readCookie(name) {
     const prefix = `${name}=`;
     return document.cookie.split('; ')
@@ -72,13 +123,13 @@ function showNotification(message, type = 'success') {
 
 async function loadCurrentUser() {
     try {
-    const response = await authFetch(`${window.__SHOP_API_BASE_URL}/auth/me`);
+        const response = await authFetch(`${window.__SHOP_API_BASE_URL}/auth/me`);
         if (!response.ok) {
-            return { authenticated: false, displayName: 'Guest', admin: false };
+            return getLocalSession() || { authenticated: false, displayName: 'Guest', admin: false };
         }
         return await response.json();
     } catch (error) {
-        return { authenticated: false, displayName: 'Guest', admin: false };
+        return getLocalSession() || { authenticated: false, displayName: 'Guest', admin: false };
     }
 }
 
@@ -121,13 +172,14 @@ async function initializeHeaderAuth() {
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
-            const response = await authFetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
-            if (response.ok) {
-                showNotification('Logged out successfully');
-                window.location.href = 'index.html';
-            } else {
-                showNotification('Logout failed', 'error');
+            try {
+                const response = await authFetch(`${window.__SHOP_API_BASE_URL}/auth/logout`, { method: 'POST' });
+                if (!response.ok) throw new Error('backend logout failed');
+            } catch {
+                clearLocalSession();
             }
+            showNotification('Logged out successfully');
+            window.location.href = 'index.html';
         });
     }
 
@@ -142,5 +194,9 @@ window.shopAuth = {
     initializeHeaderAuth,
     showNotification,
     escapeHtml,
-    readCookie
+    readCookie,
+    localRegister,
+    localLogin,
+    clearLocalSession,
+    getLocalSession
 };

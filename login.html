@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://localhost:8080; form-action 'self'; base-uri 'self'; object-src 'none'">
     <title>Login - 章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -12,14 +11,14 @@
         <a href="index.html" class="header-link-btn" style="margin-bottom:20px;">Back to Shop</a>
         <h1>Welcome back</h1>
         <p>Sign in to manage products, change your password, or continue as a registered shopper.</p>
-        <form class="auth-form" id="login-form">
+        <form class="auth-form" id="login-form" novalidate>
             <div>
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" maxlength="255" autocomplete="email" required>
+                <input id="email" name="email" type="text" maxlength="255" autocomplete="email">
             </div>
             <div>
                 <label for="password">Password</label>
-                <input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="current-password" required>
+                <input id="password" name="password" type="password" maxlength="72" autocomplete="current-password">
             </div>
             <button class="auth-submit" type="submit">Login</button>
             <div class="auth-message" id="auth-message"></div>
@@ -32,34 +31,31 @@
         const form = document.getElementById('login-form');
         const messageEl = document.getElementById('auth-message');
 
-        shopAuth.ensureCsrfToken();
+        function showError(msg) {
+            messageEl.textContent = msg;
+            messageEl.className = 'auth-message error';
+        }
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             messageEl.textContent = '';
             messageEl.className = 'auth-message';
 
-            const payload = {
-                email: document.getElementById('email').value.trim(),
-                password: document.getElementById('password').value
-            };
+            const email    = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
 
-            const response = await shopAuth.authFetch(`${shopAuth.API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            if (!email)    return showError('Email is required.');
+            if (!password) return showError('Password is required.');
 
-            const body = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                messageEl.textContent = body.message || 'Login failed';
-                messageEl.classList.add('error');
-                return;
+            // Always use local login (backend auth not yet available)
+            const result = shopAuth.localLogin(email, password);
+            if (!result.ok) {
+                return showError(result.message);
             }
 
             messageEl.textContent = 'Login successful. Redirecting...';
-            messageEl.classList.add('success');
-            window.location.href = body.admin ? 'admin.html' : 'index.html';
+            messageEl.className = 'auth-message success';
+            setTimeout(() => { window.location.href = 'index.html'; }, 600);
         });
     </script>
 </body>

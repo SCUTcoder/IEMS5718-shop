@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://localhost:8080; form-action 'self'; base-uri 'self'; object-src 'none'">
     <title>Register - 章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -12,22 +11,22 @@
         <a href="index.html" class="header-link-btn" style="margin-bottom:20px;">Back to Shop</a>
         <h1>Create account</h1>
         <p>Register with a unique email address. Password confirmation is checked on both the client and the server.</p>
-        <form class="auth-form" id="register-form">
+        <form class="auth-form" id="register-form" novalidate>
             <div>
                 <label for="display-name">Display Name</label>
-                <input id="display-name" name="display-name" type="text" maxlength="80" autocomplete="name" required>
+                <input id="display-name" name="display-name" type="text" maxlength="80" autocomplete="name">
             </div>
             <div>
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" maxlength="255" autocomplete="email" required>
+                <input id="email" name="email" type="text" maxlength="255" autocomplete="email">
             </div>
             <div>
                 <label for="password">Password</label>
-                <input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+                <input id="password" name="password" type="password" maxlength="72" autocomplete="new-password">
             </div>
             <div>
                 <label for="confirm-password">Confirm Password</label>
-                <input id="confirm-password" name="confirm-password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+                <input id="confirm-password" name="confirm-password" type="password" maxlength="72" autocomplete="new-password">
             </div>
             <button class="auth-submit" type="submit">Create Account</button>
             <div class="auth-message" id="auth-message"></div>
@@ -40,44 +39,42 @@
         const form = document.getElementById('register-form');
         const messageEl = document.getElementById('auth-message');
 
-        shopAuth.ensureCsrfToken();
+        function showError(msg) {
+            messageEl.textContent = msg;
+            messageEl.className = 'auth-message error';
+        }
+
+        function isValidEmail(val) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+        }
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             messageEl.textContent = '';
             messageEl.className = 'auth-message';
 
-            const password = document.getElementById('password').value;
+            const displayName     = document.getElementById('display-name').value.trim();
+            const email           = document.getElementById('email').value.trim();
+            const password        = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
-            if (password !== confirmPassword) {
-                messageEl.textContent = 'Passwords do not match';
-                messageEl.classList.add('error');
-                return;
+
+            // Client-side validation (all English)
+            if (!displayName)               return showError('Display name is required.');
+            if (!email)                     return showError('Email is required.');
+            if (!isValidEmail(email))       return showError('Please enter a valid email address.');
+            if (!password)                  return showError('Password is required.');
+            if (password.length < 8)        return showError('Password must be at least 8 characters.');
+            if (password !== confirmPassword) return showError('Passwords do not match.');
+
+            // Always use local registration (backend auth not yet available)
+            const result = shopAuth.localRegister(displayName, email, password);
+            if (!result.ok) {
+                return showError(result.message);
             }
 
-            const payload = {
-                displayName: document.getElementById('display-name').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password,
-                confirmPassword
-            };
-
-            const response = await shopAuth.authFetch(`${shopAuth.API_BASE_URL}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const body = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                messageEl.textContent = body.message || 'Registration failed';
-                messageEl.classList.add('error');
-                return;
-            }
-
-            messageEl.textContent = 'Registration successful. Redirecting to login...';
-            messageEl.classList.add('success');
-            setTimeout(() => { window.location.href = 'login.html'; }, 900);
+            messageEl.textContent = 'Account created! Redirecting to shop...';
+            messageEl.className = 'auth-message success';
+            setTimeout(() => { window.location.href = 'index.html'; }, 800);
         });
     </script>
 </body>
