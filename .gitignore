@@ -41,3 +41,6 @@ backend/*.backup
 # 上传的产品图片
 images/products/
 backend/images/
+
+# 本地测试视频与私有媒体
+videos/
