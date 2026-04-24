@@ -5,7 +5,9 @@ import com.iems5718.shop.dto.OrderResponse;
 import com.iems5718.shop.model.Order;
 import com.iems5718.shop.model.OrderItem;
 import com.iems5718.shop.security.CurrentUser;
+import com.iems5718.shop.service.AuthService;
 import com.iems5718.shop.service.OrderService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,9 @@ public class CheckoutController {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private AuthService authService;
+
     @Value("${shop.stripe-secret-key:}")
     private String stripeSecretKey;
 
@@ -40,8 +45,12 @@ public class CheckoutController {
     private String frontendUrl;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createCheckout(@CurrentUser String username,
+    public ResponseEntity<?> createCheckout(HttpServletRequest request,
             @RequestBody List<CheckoutRequest.CartItemDto> cartItems) {
+        CurrentUser currentUser = authService.getCurrentUser(request)
+                .orElseThrow(() -> new RuntimeException("Authentication required"));
+        String username = currentUser.user().getEmail();
+
         if (cartItems == null || cartItems.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Cart is empty"));
         }
@@ -254,7 +263,10 @@ public class CheckoutController {
     }
 
     @GetMapping("/my-orders")
-    public ResponseEntity<List<OrderResponse>> getMyOrders(@CurrentUser String username) {
+    public ResponseEntity<List<OrderResponse>> getMyOrders(HttpServletRequest request) {
+        CurrentUser currentUser = authService.getCurrentUser(request)
+                .orElseThrow(() -> new RuntimeException("Authentication required"));
+        String username = currentUser.user().getEmail();
         return ResponseEntity.ok(orderService.getUserRecentOrders(username));
     }
 
