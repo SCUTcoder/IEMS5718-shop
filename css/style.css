@@ -1321,3 +1321,44 @@ footer a { color: var(--primary-light); }
 .specifications td:first-child { font-weight: 600; width: 40%; }
 .buy-now { background: var(--success); }
 .buy-now:hover { background: #059669; }
+
+/* ── Phase 6: Social bar (Mashup) ──────────────────────────────── */
+.social-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+.social-share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity .2s, transform .2s;
+    color: #fff;
+}
+.social-share-btn:hover { opacity: .85; transform: translateY(-1px); }
+.x-share  { background: #000; }
+.wa-share { background: #25D366; }
+
+/* ── Phase 6: Infinite scroll loading dots ──────────────────────── */
+#scroll-sentinel { display: flex; justify-content: center; padding: 32px 0; }
+.infinite-loading { display: flex; gap: 8px; align-items: center; }
+.infinite-loading span {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--primary);
+    animation: infDot 1.2s ease-in-out infinite;
+}
+.infinite-loading span:nth-child(2) { animation-delay: .2s; }
+.infinite-loading span:nth-child(3) { animation-delay: .4s; }
+@keyframes infDot {
+    0%, 80%, 100% { transform: scale(0.6); opacity: .4; }
+    40%            { transform: scale(1);   opacity: 1;  }
+}

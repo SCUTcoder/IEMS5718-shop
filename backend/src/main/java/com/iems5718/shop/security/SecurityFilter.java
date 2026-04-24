@@ -48,6 +48,12 @@ public class SecurityFilter extends OncePerRequestFilter {
             }
         }
 
+        if (requestValidation.isPublicPath(path) && requestValidation.requiresCsrf(request)) {
+            // Public endpoints (e.g., payment webhooks) skip CSRF validation
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (requestValidation.requiresCsrf(request)) {
             String cookieToken = SecurityUtils.readCookie(request, SecurityConstants.CSRF_COOKIE);
             String requestToken = request.getHeader("X-CSRF-Token");

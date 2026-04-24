@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/auth.js"></script>
+    <script src="js/script.js"></script>
+    <style>
+        .profile-container { max-width: 800px; margin: 40px auto; padding: 30px; }
+        .profile-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; }
+        .profile-header h1 { margin: 0 0 8px; font-size: 1.8em; }
+        .profile-header p { margin: 0; opacity: 0.9; }
+        .orders-section { background: #f8f9fa; border-radius: 12px; padding: 24px; margin-top: 20px; }
+        .orders-section h2 { color: #2c3e50; margin-top: 0; }
+        .order-card { background: white; border-radius: 10px; padding: 18px; margin: 12px 0; border: 1px solid #e0e0e0; }
+        .order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .order-id { font-weight: bold; color: #333; font-size: 1.1em; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .order-items { font-size: 0.9em; color: #666; }
+        .order-item-line { padding: 4px 0; display: flex; justify-content: space-between; }
+        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.95em; }
+        .order-total { font-weight: bold; font-size: 1.1em; color: #27ae60; }
+        .no-orders { text-align: center; padding: 40px; color: #999; }
+        .empty-state { text-align: center; padding: 60px; background: #f8f9fa; border-radius: 12px; margin-top: 20px; }
+        .empty-state .icon { font-size: 3em; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="brand">&#x1F6D2; SecureShop</a>
+        <div class="nav-right" id="auth-section"></div>
+    </nav>
+    <div class="profile-container" id="profile-content">
+        <div id="auth-check"></div>
+    </div>
+    <script>
+        const API_BASE = window.__SHOP_API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8080/api' : '/api');
+        const session = window.shopAuth ? window.shopAuth.getLocalSession() : null;
+
+        function init() {
+            if (!session || !session.email) {
+                document.getElementById('profile-content').innerHTML =
+                    '<div class="empty-state"><div class="icon">&#x1F512;</div><h2>Login Required</h2><p><a href="login.html">Please login</a> to view your orders.</p></div>';
+                return;
+            }
+
+            const content = document.getElementById('profile-content');
+            content.innerHTML = '<div class="profile-header"><h1>Welcome, ' + escapeHtml(session.displayName || session.email) + '</h1><p>' + escapeHtml(session.email) + '</p></div>' +
+                '<div class="orders-section"><h2>&#x1F4E6; Recent Orders (Last 5)</h2><div id="orders-list"></div></div>' +
+                '<div style="text-align:center;margin-top:20px"><a href="index.html" style="color:#3498db;font-size:1em">&#x2190; Back to Shop</a></div>';
+
+            fetch(API_BASE + '/checkout/my-orders', { credentials: 'include' })
+                .then(r => r.json())
+                .then(data => renderOrders(data))
+                .catch(() => {
+                    document.getElementById('orders-list').innerHTML =
+                        '<div class="no-orders">Unable to load orders. Please try again later.</div>';
+                });
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('orders-list');
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<div class="no-orders">No orders found.</div>';
+                return;
+            }
+            let html = '';
+            orders.forEach(order => {
+                const statusClass = order.paymentStatus === 'COMPLETED' ? 'status-completed' : 'status-pending';
+                html += '<div class="order-card">';
+                html += '<div class="order-card-header">';
+                html += '<span class="order-id">Order #' + order.orderId + '</span>';
+                html += '<span class="status-badge ' + statusClass + '">' + order.paymentStatus + '</span>';
+                html += '</div>';
+                if (order.items) {
+                    html += '<div class="order-items">';
+                    order.items.forEach(item => {
+                        html += '<div class="order-item-line"><span>' + escapeHtml(item.productName) + ' x' + item.quantity + '</span><span>$' + (item.price * item.quantity).toFixed(2) + '</span></div>';
+                    });
+                    html += '</div>';
+                }
+                html += '<div class="order-footer">';
+                html += '<span class="order-time">' + new Date(order.createdAt).toLocaleString() + '</span>';
+                html += '<span class="order-total">$' + order.totalPrice.toFixed(2) + '</span>';
+                html += '</div>';
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(v) { return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        init();
+    </script>
+</body>
+</html>

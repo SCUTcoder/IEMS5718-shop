@@ -390,3 +390,14 @@ function showNotification(message) {
 function escapeHtml(value) {
     return window.shopAuth ? window.shopAuth.escapeHtml(value) : String(value ?? '');
 }
+
+
+function proceedToCheckout() {
+    const session = window.shopAuth ? window.shopAuth.getSession() : JSON.parse(localStorage.getItem('session') || '{}');
+    if (!session || !session.email) {
+        window.location.href = 'login.html?redirect=checkout.html';
+        return;
+    }
+    window.location.href = 'checkout.html';
+}
+

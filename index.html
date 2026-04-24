@@ -3,9 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8080; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob: https://*.fbcdn.net https://www.facebook.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; connect-src 'self' http://localhost:8080 https://www.facebook.com https://graph.facebook.com; frame-src https://www.facebook.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+    <!-- Open Graph / Social Sharing Meta Tags -->
+    <meta property="og:type"        content="website">
+    <meta property="og:title"       content="章程's Shop – Premium Products">
+    <meta property="og:description" content="Curated collection of quality products at great prices.">
+    <meta property="og:image"       content="images/product1.jpg">
+    <meta name="twitter:card"       content="summary_large_image">
+    <meta name="twitter:title"      content="章程's Shop – Premium Products">
+    <meta name="twitter:description" content="Curated collection of quality products at great prices.">
+    <meta name="twitter:image"      content="images/product1.jpg">
+
     <title>章程's Shop</title>
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Facebook SDK (Mashup / Social Plugin) -->
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous"
+        src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v22.0&appId=YOUR_FACEBOOK_APP_ID">
+    </script>
 </head>
 <body>
 
@@ -44,6 +61,32 @@
         <h2>Discover Premium Products</h2>
         <p>Curated collection of quality products at great prices</p>
         <a href="#products" class="hero-btn">Shop Now</a>
+
+        <!-- Social Plugin (Phase 6 – Mashup) -->
+        <div class="social-bar">
+            <!-- Facebook Like Button -->
+            <div class="fb-like"
+                data-href="https://your-shop-domain.com"
+                data-layout="button_count"
+                data-action="like"
+                data-size="small"
+                data-share="true">
+            </div>
+            <!-- Twitter / X Share -->
+            <a class="social-share-btn x-share"
+               href="https://twitter.com/intent/tweet?text=Check+out+this+amazing+shop!&url=https%3A%2F%2Fyour-shop-domain.com"
+               target="_blank" rel="noopener noreferrer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.261 5.632L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg>
+                Share on X
+            </a>
+            <!-- WhatsApp Share -->
+            <a class="social-share-btn wa-share"
+               href="https://wa.me/?text=Check+out+this+amazing+shop%3A+https%3A%2F%2Fyour-shop-domain.com"
+               target="_blank" rel="noopener noreferrer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                WhatsApp
+            </a>
+        </div>
     </section>
 
     <div id="api-status" class="api-status"></div>
@@ -87,6 +130,33 @@
     let activeCategory = 'all';
     let searchQuery = '';
 
+    // ── Infinite scroll state ──
+    const PAGE_SIZE = 8;
+    let filteredList = [];
+    let loadedCount = 0;
+    let scrollObserver = null;
+
+    // ── SEO URL helpers ──
+    function slug(str) {
+        return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    function isLocal() {
+        return window.location.hostname === 'localhost' ||
+               window.location.hostname === '127.0.0.1' ||
+               window.location.hostname === '';
+    }
+    function productUrl(product) {
+        const pid     = product.pid || product.id;
+        const catId   = product.category?.catid || product.catid || 0;
+        const catName = product.category?.name  || '';
+        if (isLocal()) return `product.html?id=${encodeURIComponent(pid)}`;
+        return `/${catId}-${slug(catName)}/${pid}-${slug(product.name)}`;
+    }
+    function categoryUrl(cat) {
+        if (isLocal()) return null; // handled client-side via activeCategory
+        return `/${cat.catid}-${slug(cat.name)}/`;
+    }
+
     // ==================== Init ====================
     document.addEventListener('DOMContentLoaded', async () => {
         await shopAuth.initializeHeaderAuth();
@@ -94,7 +164,21 @@
         updateCartDisplay();
         initCartToggle();
         initSearch();
+        readUrlParams();
     });
+
+    function readUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const catid  = params.get('catid');
+        if (catid) {
+            // Activate the matching category pill (set by nginx SEO URL rewrite)
+            activeCategory = catid;
+            document.querySelectorAll('.category-pill').forEach(btn => {
+                btn.classList.toggle('active', String(btn.dataset.catid) === String(catid));
+            });
+            filterProducts();
+        }
+    }
 
     // ==================== Categories ====================
     async function loadCategories() {
@@ -119,6 +203,9 @@
             const btn = document.createElement('button');
             btn.className = 'category-pill';
             btn.dataset.catid = cat.catid;
+            // SEO URL for anchor link (production only); client-side handled by click
+            const url = categoryUrl(cat);
+            if (url) btn.dataset.seoUrl = url;
             btn.textContent = cat.name;
             filter.appendChild(btn);
         });
@@ -136,6 +223,11 @@
     function filterProducts() {
         const grid = document.getElementById('product-grid');
         grid.innerHTML = '';
+
+        // Disconnect any existing observer
+        if (scrollObserver) { scrollObserver.disconnect(); scrollObserver = null; }
+        const oldSentinel = document.getElementById('scroll-sentinel');
+        if (oldSentinel) oldSentinel.remove();
 
         let filtered = activeCategory === 'all'
             ? allProducts
@@ -174,8 +266,41 @@
             return;
         }
 
-        filtered.forEach(product => grid.appendChild(createProductCard(product, q)));
+        // ── Infinite scroll: store result set and render first batch ──
+        filteredList = filtered;
+        loadedCount  = 0;
+        renderNextBatch(grid, q);
+        setupInfiniteScroll(grid, q);
+    }
+
+    function renderNextBatch(grid, q) {
+        const end = Math.min(loadedCount + PAGE_SIZE, filteredList.length);
+        for (let i = loadedCount; i < end; i++) {
+            grid.appendChild(createProductCard(filteredList[i], q !== undefined ? q : searchQuery.trim().toLowerCase()));
+        }
+        loadedCount = end;
         initAddToCartButtons();
+    }
+
+    function setupInfiniteScroll(grid, q) {
+        if (loadedCount >= filteredList.length) return; // all items visible already
+
+        const sentinel = document.createElement('div');
+        sentinel.id = 'scroll-sentinel';
+        sentinel.innerHTML = '<div class="infinite-loading"><span></span><span></span><span></span></div>';
+        document.querySelector('.products').insertAdjacentElement('afterend', sentinel);
+
+        scrollObserver = new IntersectionObserver((entries) => {
+            if (!entries[0].isIntersecting) return;
+            renderNextBatch(grid, q);
+            if (loadedCount >= filteredList.length) {
+                scrollObserver.disconnect();
+                scrollObserver = null;
+                sentinel.remove();
+            }
+        }, { rootMargin: '300px' });
+
+        scrollObserver.observe(sentinel);
     }
 
     // ==================== Products ====================
@@ -216,10 +341,11 @@
         const desc = query ? highlightText(safeDesc, query) : safeDesc;
         const primaryMedia = getPrimaryCardMedia(product);
 
+        const href = productUrl(product);
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
-            <a href="product.html?id=${encodeURIComponent(id)}" class="product-card-image">
+            <a href="${escapeHtml(href)}" class="product-card-image">
                 ${primaryMedia.type === 'video'
                     ? `<video src="${escapeHtml(primaryMedia.src)}" muted autoplay loop playsinline preload="metadata"></video>`
                     : `<img src="${escapeHtml(primaryMedia.src)}" alt="${safeName}" loading="lazy">`
@@ -227,7 +353,7 @@
             </a>
             <div class="product-card-body">
                 ${safeCatName ? `<div class="product-card-category">${safeCatName}</div>` : ''}
-                <h3><a href="product.html?id=${encodeURIComponent(id)}">${name}</a></h3>
+                <h3><a href="${escapeHtml(href)}">${name}</a></h3>
                 <p class="product-card-desc">${desc}</p>
                 <div class="product-card-footer">
                     <span class="price">$${product.price.toFixed(2)}</span>
@@ -449,7 +575,7 @@
         const checkoutBtn = document.getElementById('checkout-btn');
         if (checkoutBtn) {
             checkoutBtn.addEventListener('click', () => {
-                alert('Checkout functionality coming soon!');
+                window.location.href = 'checkout.html';
             });
         }
     }

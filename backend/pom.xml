@@ -23,6 +23,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+        <repositories><repository><id>central</id><url>https://repo.maven.apache.org/maven2</url></repository></repositories>
+
     <dependencies>
         <!-- Spring Boot Web Starter -->
         <dependency>
@@ -88,6 +90,7 @@
             <artifactId>thumbnailator</artifactId>
             <version>0.4.20</version>
         </dependency>
+            <dependency><groupId>com.stripe</groupId><artifactId>stripe-java</artifactId><version>24.17.0</version></dependency>
     </dependencies>
 
     <build>

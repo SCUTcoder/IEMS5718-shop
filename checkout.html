@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/auth.js"></script>
+    <style>
+        .checkout-container { max-width: 700px; margin: 40px auto; padding: 30px; }
+        .order-summary { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .order-summary h2 { margin-top: 0; font-size: 1.4em; color: #2c3e50; }
+        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .order-item:last-child { border-bottom: none; }
+        .order-total { display: flex; justify-content: space-between; padding: 15px 0 0; font-weight: bold; font-size: 1.2em; border-top: 2px solid #2c3e50; margin-top: 10px; }
+        .checkout-btn { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
+        .checkout-btn:hover { background: #219a52; }
+        .checkout-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .login-prompt { text-align: center; padding: 40px; background: #fff3cd; border-radius: 12px; }
+        .login-prompt a { color: #856404; font-weight: bold; }
+        #status-msg { text-align: center; margin-top: 15px; color: #666; font-size: 0.95em; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="brand">&#x1F6D2; SecureShop</a>
+        <div class="nav-right">
+            <div id="auth-section"></div>
+        </div>
+    </nav>
+    <div class="checkout-container">
+        <div id="auth-check"></div>
+        <div id="cart-check"></div>
+        <div id="order-summary"></div>
+        <div id="checkout-actions"></div>
+        <div id="status-msg"></div>
+    </div>
+    <script>
+        const API_BASE = window.__SHOP_API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8080/api' : '/api');
+        let currentSession = null;
+
+        function init() {
+            currentSession = window.shopAuth ? window.shopAuth.getLocalSession() : null;
+            const cart = JSON.parse(localStorage.getItem('iems5718-cart') || '[]');
+
+            if (!currentSession || !currentSession.email) {
+                document.getElementById('auth-check').innerHTML =
+                    '<div class="login-prompt"><p>You need to <a href="login.html">login</a> to checkout.</p></div>';
+                return;
+            }
+            if (!cart || cart.length === 0) {
+                document.getElementById('cart-check').innerHTML =
+                    '<div class="login-prompt"><p>Your cart is empty. <a href="index.html">Browse products</a></p></div>';
+                return;
+            }
+
+            renderOrderSummary(cart);
+            renderCheckoutActions(cart);
+        }
+
+        function renderOrderSummary(cart) {
+            let html = '<div class="order-summary"><h2>Order Summary</h2>';
+            cart.forEach(item => {
+                html += '<div class="order-item"><span>' + escapeHtml(item.name) + ' x' + item.quantity +
+                    '</span><span>$' + (item.price * item.quantity).toFixed(2) + '</span></div>';
+            });
+            const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+            html += '<div class="order-total"><span>Total</span><span>$' + total.toFixed(2) + '</span></div>';
+            html += '</div>';
+            document.getElementById('order-summary').innerHTML = html;
+        }
+
+        function renderCheckoutActions(cart) {
+            document.getElementById('checkout-actions').innerHTML =
+                '<button class="checkout-btn" id="checkout-btn" onclick="doCheckout()">Proceed to Checkout</button>';
+        }
+
+        function doCheckout() {
+            const btn = document.getElementById('checkout-btn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            document.getElementById('status-msg').textContent = 'Creating secure order...';
+
+            const cart = JSON.parse(localStorage.getItem('iems5718-cart') || '[]');
+            const items = cart.map(item => ({ pid: item.id, quantity: item.quantity }));
+
+            fetch(API_BASE + '/checkout/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(items)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('status-msg').textContent = 'Error: ' + data.error;
+                    btn.disabled = false;
+                    btn.textContent = 'Proceed to Checkout';
+                    return;
+                }
+
+                localStorage.removeItem('cart');
+
+                if (data.useStripe && data.checkoutUrl) {
+                    document.getElementById('status-msg').textContent = 'Redirecting to Stripe checkout...';
+                    window.location.href = data.checkoutUrl;
+                } else {
+                    // Test mode: show success directly
+                    window.location.href = 'checkout-success.html?order_id=' + data.orderId;
+                }
+            })
+            .catch(err => {
+                document.getElementById('status-msg').textContent = 'Network error: ' + err.message;
+                btn.disabled = false;
+                btn.textContent = 'Proceed to Checkout';
+            });
+        }
+
+        function escapeHtml(v) { return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        init();
+    </script>
+</body>
+</html>

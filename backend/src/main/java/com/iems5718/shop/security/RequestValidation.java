@@ -18,6 +18,7 @@ public class RequestValidation {
         return path.equals("/api/auth/login")
                 || path.equals("/api/auth/register")
                 || path.equals("/api/auth/csrf")
+                || path.equals("/api/checkout/webhook")
                 || path.startsWith("/images/")
                 || path.startsWith("/videos/")
                 || path.startsWith("/api/products")

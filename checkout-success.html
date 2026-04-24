@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/auth.js"></script>
+    <style>
+        .success-container { max-width: 600px; margin: 60px auto; text-align: center; padding: 40px; }
+        .checkmark { font-size: 4em; color: #27ae60; margin-bottom: 20px; }
+        .order-detail { background: #f8f9fa; border-radius: 12px; padding: 24px; margin-top: 24px; text-align: left; }
+        .order-detail h3 { margin-top: 0; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .detail-row:last-child { border-bottom: none; }
+        .back-btn { display: inline-block; margin-top: 24px; padding: 12px 30px; background: #3498db; color: white; text-decoration: none; border-radius: 8px; font-size: 1em; }
+        .back-btn:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="brand">&#x1F6D2; SecureShop</a>
+        <div id="auth-section"></div>
+    </nav>
+    <div class="success-container" id="content">
+        <div class="checkmark">&#x2705;</div>
+        <h1>Payment Successful!</h1>
+        <p>Thank you for your purchase. Your order has been processed.</p>
+        <div class="order-detail" id="order-detail"></div>
+        <a href="index.html" class="back-btn">Continue Shopping</a>
+        <a href="profile.html" class="back-btn" style="background:#8e44ad; margin-left:10px">View My Orders</a>
+    </div>
+    <script>
+        const API_BASE = window.location.origin.includes('8080') ? 'http://127.0.0.1:8080/api' : '/api';
+        const params = new URLSearchParams(window.location.search);
+        const orderId = params.get('order_id');
+
+        function init() {
+            if (document.getElementById('auth-section')) renderAuthNav(document.getElementById('auth-section'));
+
+            if (!orderId) {
+                document.getElementById('order-detail').innerHTML = '<p>No order information available.</p>';
+                return;
+            }
+
+            fetch(API_BASE + '/checkout/order/' + orderId, { credentials: 'include' })
+                .then(r => { if (!r.ok) throw new Error('Not found'); return r.json(); })
+                .then(data => {
+                    renderOrderDetail(data);
+                })
+                .catch(() => {
+                    document.getElementById('order-detail').innerHTML = '<p>Order #' + orderId + ' confirmed.</p>';
+                });
+        }
+
+        function renderOrderDetail(order) {
+            let html = '<h3>Order #' + order.orderId + '</h3>';
+            html += '<div class="detail-row"><span>Status</span><span style="color:#27ae60;font-weight:bold">' + order.paymentStatus + '</span></div>';
+            html += '<div class="detail-row"><span>Total</span><span>' + order.currency + ' $' + order.totalPrice.toFixed(2) + '</span></div>';
+            if (order.items) {
+                html += '<h4 style="margin:16px 0 8px">Items:</h4>';
+                order.items.forEach(item => {
+                    html += '<div class="detail-row"><span>' + item.productName + ' x' + item.quantity + '</span><span>$' + (item.price * item.quantity).toFixed(2) + '</span></div>';
+                });
+            }
+            if (order.paidAt) {
+                html += '<div class="detail-row"><span>Paid at</span><span>' + new Date(order.paidAt).toLocaleString() + '</span></div>';
+            }
+            document.getElementById('order-detail').innerHTML = html;
+        }
+
+        function renderAuthNav(el) { if (window.shopAuth) window.shopAuth.renderAuthNav(el); }
+        init();
+    </script>
+</body>
+</html>

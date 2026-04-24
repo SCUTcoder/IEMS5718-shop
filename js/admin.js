@@ -344,6 +344,11 @@ function switchSection(section) {
 
     document.querySelector(`.admin-tab[data-section="${section}"]`).classList.add('active');
     document.getElementById(`${section}-section`).classList.add('active');
+
+    // Auto-load orders when switching to orders tab
+    if (section === 'orders') {
+        loadOrders();
+    }
 }
 
 async function loadCategories() {
@@ -799,4 +804,44 @@ function escapeHtml(value) {
 
 function showNotification(message, type = 'success') {
     window.shopAuth.showNotification(message, type);
+}
+
+// Orders Management
+async function loadOrders() {
+    try {
+        const res = await fetch(API_BASE_URL + '/checkout/admin/orders', { credentials: 'include' });
+        const orders = await res.json();
+        renderOrders(orders);
+    } catch (e) {
+        document.getElementById('orders-list').innerHTML = '<p style="color:#e74c3c">Failed to load orders</p>';
+    }
+}
+
+function renderOrders(orders) {
+    const container = document.getElementById('orders-list');
+    if (!orders || orders.length === 0) {
+        container.innerHTML = '<p style="color:#999;text-align:center;padding:40px">No orders yet</p>';
+        return;
+    }
+    let html = '<table class="data-table"><thead><tr>';
+    html += '<th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Txn ID</th>';
+    html += '</tr></thead><tbody>';
+    orders.forEach(function (order) {
+        html += '<tr>';
+        html += '<td>' + order.orderId + '</td>';
+        html += '<td>' + escapeHtml(order.username || 'Guest') + '</td>';
+        let itemsStr = '';
+        if (order.items) {
+            itemsStr = order.items.map(function (i) { return i.productName + ' x' + i.quantity; }).join(', ');
+        }
+        html += '<td style="max-width:200px">' + escapeHtml(itemsStr) + '</td>';
+        html += '<td>$' + order.totalPrice.toFixed(2) + '</td>';
+        const statusColor = order.paymentStatus === 'COMPLETED' ? '#27ae60' : '#f39c12';
+        html += '<td style="color:' + statusColor + ';font-weight:bold">' + order.paymentStatus + '</td>';
+        html += '<td>' + new Date(order.createdAt).toLocaleString() + '</td>';
+        html += '<td style="font-size:0.85em">' + (order.transactionId || '-') + '</td>';
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
 }
