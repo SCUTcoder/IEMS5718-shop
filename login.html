@@ -47,10 +47,22 @@
             if (!email)    return showError('Email is required.');
             if (!password) return showError('Password is required.');
 
-            // Always use local login (backend auth not yet available)
-            const result = shopAuth.localLogin(email, password);
-            if (!result.ok) {
-                return showError(result.message);
+            try {
+                const response = await shopAuth.authFetch(`${shopAuth.API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const body = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    return showError(body.message || 'Incorrect email or password.');
+                }
+                shopAuth.clearLocalSession();
+            } catch (error) {
+                const result = shopAuth.localLogin(email, password);
+                if (!result.ok) {
+                    return showError('Unable to reach the backend, and no local account matched.');
+                }
             }
 
             messageEl.textContent = 'Login successful. Redirecting...';
