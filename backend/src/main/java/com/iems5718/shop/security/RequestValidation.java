@@ -34,7 +34,6 @@ public class RequestValidation {
 
     public boolean isAuthProtectedPath(String path) {
         return path.equals("/api/auth/logout")
-                || path.equals("/api/auth/change-password")
-                || path.equals("/api/auth/me");
+                || path.equals("/api/auth/change-password");
     }
 }

@@ -8,17 +8,17 @@
     <script src="js/auth.js"></script>
     <style>
         .checkout-container { max-width: 700px; margin: 40px auto; padding: 30px; }
-        .order-summary { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .order-summary h2 { margin-top: 0; font-size: 1.4em; color: #2c3e50; }
-        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .order-summary { background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
+        .order-summary h2 { margin-top: 0; font-family: var(--font-serif); font-size: 1.45em; font-weight: 500; color: var(--text); }
+        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
         .order-item:last-child { border-bottom: none; }
-        .order-total { display: flex; justify-content: space-between; padding: 15px 0 0; font-weight: bold; font-size: 1.2em; border-top: 2px solid #2c3e50; margin-top: 10px; }
-        .checkout-btn { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
-        .checkout-btn:hover { background: #219a52; }
-        .checkout-btn:disabled { background: #95a5a6; cursor: not-allowed; }
-        .login-prompt { text-align: center; padding: 40px; background: #fff3cd; border-radius: 12px; }
-        .login-prompt a { color: #856404; font-weight: bold; }
-        #status-msg { text-align: center; margin-top: 15px; color: #666; font-size: 0.95em; }
+        .order-total { display: flex; justify-content: space-between; padding: 15px 0 0; font-weight: 700; font-size: 1.2em; border-top: 2px solid var(--text); margin-top: 10px; }
+        .checkout-btn { width: 100%; padding: 15px; background: var(--primary); color: #FFF8F1; border: none; border-radius: var(--radius-sm); font-size: 1.05em; cursor: pointer; margin-top: 20px; transition: background 0.2s, transform 0.2s; }
+        .checkout-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .checkout-btn:disabled { background: var(--border); color: var(--text-light); cursor: not-allowed; transform: none; }
+        .login-prompt { text-align: center; padding: 40px; background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius); }
+        .login-prompt a { color: var(--primary); font-weight: 700; }
+        #status-msg { text-align: center; margin-top: 15px; color: var(--text-secondary); font-size: 0.95em; }
     </style>
 </head>
 <body>
@@ -36,14 +36,14 @@
         <div id="status-msg"></div>
     </div>
     <script>
-        const API_BASE = window.__SHOP_API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8080/api' : '/api');
+        const API_BASE = window.shopAuth.API_BASE_URL;
         let currentSession = null;
 
-        function init() {
-            currentSession = window.shopAuth ? window.shopAuth.getLocalSession() : null;
+        async function init() {
+            currentSession = await window.shopAuth.loadCurrentUser();
             const cart = JSON.parse(localStorage.getItem('iems5718-cart') || '[]');
 
-            if (!currentSession || !currentSession.email) {
+            if (!currentSession || !currentSession.authenticated) {
                 document.getElementById('auth-check').innerHTML =
                     '<div class="login-prompt"><p>You need to <a href="login.html">login</a> to checkout.</p></div>';
                 return;
@@ -84,10 +84,9 @@
             const cart = JSON.parse(localStorage.getItem('iems5718-cart') || '[]');
             const items = cart.map(item => ({ pid: item.id, quantity: item.quantity }));
 
-            fetch(API_BASE + '/checkout/create', {
+            window.shopAuth.authFetch(API_BASE + '/checkout/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify(items)
             })
             .then(r => r.json())
@@ -99,7 +98,7 @@
                     return;
                 }
 
-                localStorage.removeItem('cart');
+                localStorage.removeItem('iems5718-cart');
 
                 if (data.useStripe && data.checkoutUrl) {
                     document.getElementById('status-msg').textContent = 'Redirecting to Stripe checkout...';

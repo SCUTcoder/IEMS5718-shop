@@ -65,9 +65,14 @@
                 }
             }
 
+            const redirect = new URLSearchParams(window.location.search).get('redirect');
+            const safeRedirect = redirect && !redirect.startsWith('http') && !redirect.startsWith('//')
+                ? redirect
+                : 'index.html';
+
             messageEl.textContent = 'Login successful. Redirecting...';
             messageEl.className = 'auth-message success';
-            setTimeout(() => { window.location.href = 'index.html'; }, 600);
+            setTimeout(() => { window.location.href = safeRedirect; }, 600);
         });
     </script>
 </body>

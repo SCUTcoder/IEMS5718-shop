@@ -10,6 +10,7 @@ import com.iems5718.shop.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,8 +48,11 @@ public class CheckoutController {
     @PostMapping("/create")
     public ResponseEntity<?> createCheckout(HttpServletRequest request,
             @RequestBody List<CheckoutRequest.CartItemDto> cartItems) {
-        CurrentUser currentUser = authService.getCurrentUser(request)
-                .orElseThrow(() -> new RuntimeException("Authentication required"));
+        var currentUserOpt = authService.getCurrentUser(request);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required"));
+        }
+        CurrentUser currentUser = currentUserOpt.get();
         String username = currentUser.user().getEmail();
 
         if (cartItems == null || cartItems.isEmpty()) {
@@ -117,36 +121,24 @@ public class CheckoutController {
     }
 
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<?> getOrderById(@PathVariable Long orderId) {
-        try {
-            Order order = orderService.orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-            List<OrderItem> items = orderService.orderItemRepository.findByOrderOrderId(orderId);
+    public ResponseEntity<?> getOrderById(@PathVariable Long orderId, HttpServletRequest request) {
+        var currentUserOpt = authService.getCurrentUser(request);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required"));
+        }
 
-            List<OrderResponse.OrderItemDto> itemDtos = new ArrayList<>();
-            for (OrderItem item : items) {
-                itemDtos.add(OrderResponse.OrderItemDto.builder()
-                    .productId(item.getProductId())
-                    .productName(item.getProductName())
-                    .quantity(item.getQuantity())
-                    .price(item.getPrice())
-                    .build());
-            }
-            OrderResponse response = OrderResponse.builder()
-                .orderId(order.getOrderId())
-                .username(order.getUsername())
-                .currency(order.getCurrency())
-                .totalPrice(order.getTotalPrice())
-                .paymentStatus(order.getPaymentStatus())
-                .transactionId(order.getTransactionId())
-                .createdAt(order.getCreatedAt())
-                .paidAt(order.getPaidAt())
-                .items(itemDtos)
-                .build();
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
+        CurrentUser currentUser = currentUserOpt.get();
+        OrderResponse response = orderService.getAllOrders().stream()
+                .filter(order -> orderId.equals(order.getOrderId()))
+                .findFirst()
+                .orElse(null);
+        if (response == null) {
             return ResponseEntity.notFound().build();
         }
+        if (!currentUser.isAdmin() && !currentUser.user().getEmail().equals(response.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+        }
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -263,15 +255,26 @@ public class CheckoutController {
     }
 
     @GetMapping("/my-orders")
-    public ResponseEntity<List<OrderResponse>> getMyOrders(HttpServletRequest request) {
-        CurrentUser currentUser = authService.getCurrentUser(request)
-                .orElseThrow(() -> new RuntimeException("Authentication required"));
+    public ResponseEntity<?> getMyOrders(HttpServletRequest request) {
+        var currentUserOpt = authService.getCurrentUser(request);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required"));
+        }
+        CurrentUser currentUser = currentUserOpt.get();
         String username = currentUser.user().getEmail();
         return ResponseEntity.ok(orderService.getUserRecentOrders(username));
     }
 
     @GetMapping("/admin/orders")
-    public ResponseEntity<List<OrderResponse>> getAllOrders() {
+    public ResponseEntity<?> getAllOrders(HttpServletRequest request) {
+        var currentUserOpt = authService.getCurrentUser(request);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required"));
+        }
+        CurrentUser currentUser = currentUserOpt.get();
+        if (!currentUser.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin access required"));
+        }
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 

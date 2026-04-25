@@ -66,10 +66,31 @@
             if (password.length < 8)        return showError('Password must be at least 8 characters.');
             if (password !== confirmPassword) return showError('Passwords do not match.');
 
-            // Always use local registration (backend auth not yet available)
-            const result = shopAuth.localRegister(displayName, email, password);
-            if (!result.ok) {
-                return showError(result.message);
+            try {
+                const registerResponse = await shopAuth.authFetch(`${shopAuth.API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ displayName, email, password, confirmPassword })
+                });
+                const registerBody = await registerResponse.json().catch(() => ({}));
+                if (!registerResponse.ok) {
+                    return showError(registerBody.message || 'Unable to create account.');
+                }
+
+                const loginResponse = await shopAuth.authFetch(`${shopAuth.API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                if (!loginResponse.ok) {
+                    return showError('Account created. Please login with your new account.');
+                }
+                shopAuth.clearLocalSession();
+            } catch (error) {
+                const result = shopAuth.localRegister(displayName, email, password);
+                if (!result.ok) {
+                    return showError(result.message);
+                }
             }
 
             messageEl.textContent = 'Account created! Redirecting to shop...';

@@ -9,23 +9,23 @@
     <script src="js/script.js"></script>
     <style>
         .profile-container { max-width: 800px; margin: 40px auto; padding: 30px; }
-        .profile-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; }
-        .profile-header h1 { margin: 0 0 8px; font-size: 1.8em; }
-        .profile-header p { margin: 0; opacity: 0.9; }
-        .orders-section { background: #f8f9fa; border-radius: 12px; padding: 24px; margin-top: 20px; }
-        .orders-section h2 { color: #2c3e50; margin-top: 0; }
-        .order-card { background: white; border-radius: 10px; padding: 18px; margin: 12px 0; border: 1px solid #e0e0e0; }
+        .profile-header { background: var(--ink); color: var(--bg-white); border-radius: var(--radius); padding: 30px; margin-bottom: 30px; border: 1px solid rgba(255,252,245,0.08); }
+        .profile-header h1 { margin: 0 0 8px; font-family: var(--font-serif); font-size: 1.9em; font-weight: 500; }
+        .profile-header p { margin: 0; opacity: 0.85; }
+        .orders-section { background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-top: 20px; }
+        .orders-section h2 { color: var(--text); font-family: var(--font-serif); font-weight: 500; margin-top: 0; }
+        .order-card { background: var(--bg-white); border-radius: var(--radius); padding: 18px; margin: 12px 0; border: 1px solid var(--border); }
         .order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .order-id { font-weight: bold; color: #333; font-size: 1.1em; }
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-completed { background: #d4edda; color: #155724; }
-        .order-items { font-size: 0.9em; color: #666; }
+        .order-id { font-weight: 700; color: var(--text); font-size: 1.1em; }
+        .status-badge { padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.85em; font-weight: 600; }
+        .status-pending { background: #F5DDBB; color: #7A542A; }
+        .status-completed { background: #E6EFE6; color: var(--success); }
+        .order-items { font-size: 0.9em; color: var(--text-secondary); }
         .order-item-line { padding: 4px 0; display: flex; justify-content: space-between; }
-        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.95em; }
-        .order-total { font-weight: bold; font-size: 1.1em; color: #27ae60; }
-        .no-orders { text-align: center; padding: 40px; color: #999; }
-        .empty-state { text-align: center; padding: 60px; background: #f8f9fa; border-radius: 12px; margin-top: 20px; }
+        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-light); font-size: 0.95em; }
+        .order-total { font-weight: 700; font-size: 1.1em; color: var(--success); }
+        .no-orders { text-align: center; padding: 40px; color: var(--text-light); }
+        .empty-state { text-align: center; padding: 60px; background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 20px; }
         .empty-state .icon { font-size: 3em; margin-bottom: 12px; }
     </style>
 </head>
@@ -38,22 +38,23 @@
         <div id="auth-check"></div>
     </div>
     <script>
-        const API_BASE = window.__SHOP_API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8080/api' : '/api');
-        const session = window.shopAuth ? window.shopAuth.getLocalSession() : null;
+        const API_BASE = window.shopAuth.API_BASE_URL;
+        let session = null;
 
-        function init() {
-            if (!session || !session.email) {
+        async function init() {
+            session = await window.shopAuth.loadCurrentUser();
+            if (!session || !session.authenticated) {
                 document.getElementById('profile-content').innerHTML =
                     '<div class="empty-state"><div class="icon">&#x1F512;</div><h2>Login Required</h2><p><a href="login.html">Please login</a> to view your orders.</p></div>';
                 return;
             }
 
             const content = document.getElementById('profile-content');
-            content.innerHTML = '<div class="profile-header"><h1>Welcome, ' + escapeHtml(session.displayName || session.email) + '</h1><p>' + escapeHtml(session.email) + '</p></div>' +
+            content.innerHTML = '<div class="profile-header"><h1>Welcome, ' + escapeHtml(session.displayName || session.email) + '</h1><p>' + escapeHtml(session.email || '') + '</p></div>' +
                 '<div class="orders-section"><h2>&#x1F4E6; Recent Orders (Last 5)</h2><div id="orders-list"></div></div>' +
-                '<div style="text-align:center;margin-top:20px"><a href="index.html" style="color:#3498db;font-size:1em">&#x2190; Back to Shop</a></div>';
+                '<div style="text-align:center;margin-top:20px"><a href="index.html" style="color:var(--primary);font-size:1em">&#x2190; Back to Shop</a></div>';
 
-            fetch(API_BASE + '/checkout/my-orders', { credentials: 'include' })
+            window.shopAuth.authFetch(API_BASE + '/checkout/my-orders')
                 .then(r => r.json())
                 .then(data => renderOrders(data))
                 .catch(() => {

@@ -392,12 +392,13 @@ function escapeHtml(value) {
 }
 
 
-function proceedToCheckout() {
-    const session = window.shopAuth ? window.shopAuth.getSession() : JSON.parse(localStorage.getItem('session') || '{}');
-    if (!session || !session.email) {
+async function proceedToCheckout() {
+    const session = window.shopAuth
+        ? await window.shopAuth.loadCurrentUser()
+        : JSON.parse(localStorage.getItem('session') || '{}');
+    if (!session || !session.authenticated) {
         window.location.href = 'login.html?redirect=checkout.html';
         return;
     }
     window.location.href = 'checkout.html';
 }
-
