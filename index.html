@@ -151,6 +151,40 @@
         if (/^(https?:|data:|blob:|\/)/i.test(value)) return value;
         return '/' + value.replace(/^\.?\//, '');
     }
+    function splitMediaCsv(csv) {
+        if (!csv) return [];
+        return csv.split(',')
+            .map(item => normalizeAssetUrl(item.trim()))
+            .filter(Boolean);
+    }
+    function getProductImageSets(product) {
+        const galleryImages = splitMediaCsv(product.galleryImageUrls);
+        const thumbnailImages = splitMediaCsv(product.thumbnailUrls);
+        const primaryImage = normalizeAssetUrl(product.imageUrl || product.thumbnailUrl || '');
+
+        if (galleryImages.length > 0) {
+            return {
+                images: galleryImages,
+                thumbnails: thumbnailImages.length === galleryImages.length ? thumbnailImages : galleryImages
+            };
+        }
+
+        if (thumbnailImages.length > 0) {
+            return {
+                images: thumbnailImages,
+                thumbnails: thumbnailImages
+            };
+        }
+
+        return {
+            images: primaryImage ? [primaryImage] : [],
+            thumbnails: primaryImage ? [primaryImage] : []
+        };
+    }
+    function getPrimaryImage(product) {
+        const imageSet = getProductImageSets(product);
+        return imageSet.thumbnails[0] || imageSet.images[0] || '';
+    }
     function isLocal() {
         return window.location.hostname === 'localhost' ||
                window.location.hostname === '127.0.0.1' ||
@@ -382,21 +416,20 @@
     }
 
     function getPrimaryCardMedia(product) {
-        if (product.videoUrl) {
-            return { type: 'video', src: normalizeAssetUrl(product.videoUrl) };
-        }
+        const image = getPrimaryImage(product);
+        if (image) return { type: 'image', src: image };
+        if (product.videoUrl) return { type: 'video', src: normalizeAssetUrl(product.videoUrl) };
         return {
             type: 'image',
-            src: normalizeAssetUrl(product.imageUrl || product.thumbnailUrl || '/images/product1.jpg')
+            src: '/images/product1.jpg'
         };
     }
 
     function getCartItemMedia(product) {
-        const primaryMedia = getPrimaryCardMedia(product);
-        const fallbackImage = normalizeAssetUrl(product.imageUrl || product.thumbnailUrl || '');
+        const image = getPrimaryImage(product);
         return {
-            image: primaryMedia.type === 'image' ? primaryMedia.src : fallbackImage,
-            mediaType: primaryMedia.type
+            image,
+            mediaType: image ? 'image' : (product.videoUrl ? 'video' : 'image')
         };
     }
 
@@ -495,7 +528,7 @@
     }
 
     function updateCartQuantity(productId, newQty) {
-        const item = cart.find(item => item.id === productId);
+        const item = cart.find(item => String(item.id) === String(productId));
         if (item) {
             item.quantity = parseInt(newQty);
             if (item.quantity <= 0) {
@@ -512,6 +545,21 @@
         const itemsEl = document.getElementById('cart-items');
         const checkoutBtn = document.getElementById('checkout-btn');
         if (!countEl || !itemsEl) return;
+
+        let cartChanged = false;
+        cart.forEach(item => {
+            const product = productsData[String(item.id)] || productsData[item.id];
+            if (!product) return;
+            const media = getCartItemMedia(product);
+            if (media.image && item.image !== media.image) {
+                item.image = media.image;
+                item.mediaType = 'image';
+                cartChanged = true;
+            }
+        });
+        if (cartChanged) {
+            localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+        }
 
         const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
         const totalAmount = cart.reduce((s, i) => s + i.price * i.quantity, 0);
