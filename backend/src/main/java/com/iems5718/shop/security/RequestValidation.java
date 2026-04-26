@@ -15,14 +15,18 @@ public class RequestValidation {
     }
 
     public boolean isPublicPath(String path) {
-        return path.equals("/api/auth/login")
-                || path.equals("/api/auth/register")
-                || path.equals("/api/auth/csrf")
-                || path.equals("/api/checkout/webhook")
+        return isCsrfExemptPath(path)
                 || path.startsWith("/images/")
                 || path.startsWith("/videos/")
                 || path.startsWith("/api/products")
                 || path.startsWith("/api/categories");
+    }
+
+    public boolean isCsrfExemptPath(String path) {
+        return path.equals("/api/auth/login")
+                || path.equals("/api/auth/register")
+                || path.equals("/api/auth/csrf")
+                || path.equals("/api/checkout/webhook");
     }
 
     public boolean isAdminWritePath(String path, String method) {

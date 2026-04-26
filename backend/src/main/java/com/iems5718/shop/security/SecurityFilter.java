@@ -48,7 +48,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             }
         }
 
-        if (requestValidation.isPublicPath(path) && requestValidation.requiresCsrf(request)) {
+        if (requestValidation.isCsrfExemptPath(path) && requestValidation.requiresCsrf(request)) {
             // Public endpoints (e.g., payment webhooks) skip CSRF validation
             filterChain.doFilter(request, response);
             return;
