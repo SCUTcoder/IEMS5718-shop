@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     cart = JSON.parse(localStorage.getItem('iems5718-cart')) || [];
     updateCartDisplay();
 
-    if (window.location.pathname.includes('product.html')) {
+    if (document.getElementById('product-detail')) {
         setTimeout(() => loadProductDetail(), 100);
     }
 
@@ -43,10 +43,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function loadProducts() {
     productsData = {
-        '1': { id: 1, pid: 1, name: 'Gaming Laptop', price: 1299.99, imageUrl: 'images/product1.jpg', galleryImageUrls: 'images/product1.jpg,images/product1-2.jpg,images/product1-3.jpg,images/product1-4.jpg', thumbnailUrls: 'images/product1.jpg,images/product1-2.jpg,images/product1-3.jpg,images/product1-4.jpg', description: 'Experience gaming like never before with our high-performance gaming laptop. Featuring the latest Intel Core i7 processor, NVIDIA RTX 4070 graphics card, and 16GB DDR5 RAM.', category: { catid: 1, name: 'Electronics' } },
-        '2': { id: 2, pid: 2, name: 'Wireless Headphones', price: 249.99, imageUrl: 'images/product2.jpg', galleryImageUrls: 'images/product2.jpg', thumbnailUrls: 'images/product2.jpg', description: 'Premium wireless headphones with noise cancellation. Crystal-clear audio with advanced active noise cancellation technology.', category: { catid: 1, name: 'Electronics' } },
-        '3': { id: 3, pid: 3, name: 'Smart Watch', price: 399.99, imageUrl: 'images/product3.jpg', galleryImageUrls: 'images/product3.jpg', thumbnailUrls: 'images/product3.jpg', description: 'Latest smartwatch with health monitoring features. Track fitness goals, heart rate, sleep patterns, and stay connected.', category: { catid: 1, name: 'Electronics' } },
-        '4': { id: 4, pid: 4, name: 'Tablet PC', price: 599.99, imageUrl: 'images/product4.jpg', galleryImageUrls: 'images/product4.jpg', thumbnailUrls: 'images/product4.jpg', description: 'Portable tablet perfect for work and entertainment. Stunning high-resolution display, powerful processor, and all-day battery.', category: { catid: 1, name: 'Electronics' } }
+        '1': { id: 1, pid: 1, name: 'Gaming Laptop', price: 1299.99, imageUrl: '/images/product1.jpg', galleryImageUrls: '/images/product1.jpg,/images/product1-2.jpg,/images/product1-3.jpg,/images/product1-4.jpg', thumbnailUrls: '/images/product1.jpg,/images/product1-2.jpg,/images/product1-3.jpg,/images/product1-4.jpg', description: 'Experience gaming like never before with our high-performance gaming laptop. Featuring the latest Intel Core i7 processor, NVIDIA RTX 4070 graphics card, and 16GB DDR5 RAM.', category: { catid: 1, name: 'Electronics' } },
+        '2': { id: 2, pid: 2, name: 'Wireless Headphones', price: 249.99, imageUrl: '/images/product2.jpg', galleryImageUrls: '/images/product2.jpg', thumbnailUrls: '/images/product2.jpg', description: 'Premium wireless headphones with noise cancellation. Crystal-clear audio with advanced active noise cancellation technology.', category: { catid: 1, name: 'Electronics' } },
+        '3': { id: 3, pid: 3, name: 'Smart Watch', price: 399.99, imageUrl: '/images/product3.jpg', galleryImageUrls: '/images/product3.jpg', thumbnailUrls: '/images/product3.jpg', description: 'Latest smartwatch with health monitoring features. Track fitness goals, heart rate, sleep patterns, and stay connected.', category: { catid: 1, name: 'Electronics' } },
+        '4': { id: 4, pid: 4, name: 'Tablet PC', price: 599.99, imageUrl: '/images/product4.jpg', galleryImageUrls: '/images/product4.jpg', thumbnailUrls: '/images/product4.jpg', description: 'Portable tablet perfect for work and entertainment. Stunning high-resolution display, powerful processor, and all-day battery.', category: { catid: 1, name: 'Electronics' } }
     };
 
     try {
@@ -69,8 +69,15 @@ function splitMediaCsv(csv) {
     }
 
     return csv.split(',')
-        .map(item => item.trim())
+        .map(item => normalizeAssetUrl(item.trim()))
         .filter(Boolean);
+}
+
+function normalizeAssetUrl(url) {
+    const value = String(url || '').trim();
+    if (!value) return '';
+    if (/^(https?:|data:|blob:|\/)/i.test(value)) return value;
+    return '/' + value.replace(/^\.?\//, '');
 }
 
 function getProductImageSets(product) {
@@ -106,8 +113,8 @@ function getProductImageSets(product) {
     }
 
     return {
-        images: product.imageUrl ? [product.imageUrl] : [],
-        thumbnails: product.imageUrl ? [product.imageUrl] : []
+        images: product.imageUrl ? [normalizeAssetUrl(product.imageUrl)] : [],
+        thumbnails: product.imageUrl ? [normalizeAssetUrl(product.imageUrl)] : []
     };
 }
 
@@ -123,7 +130,7 @@ function buildProductMediaItems(product) {
     if (product.videoUrl) {
         mediaItems.push({
             type: 'video',
-            src: product.videoUrl,
+            src: normalizeAssetUrl(product.videoUrl),
             thumbnail: imageSet.thumbnails[0] || imageSet.images[0] || '',
             alt: `${product.name} video`
         });
@@ -132,7 +139,7 @@ function buildProductMediaItems(product) {
     if (mediaItems.length === 0 && product.videoUrl) {
         mediaItems.push({
             type: 'video',
-            src: product.videoUrl,
+            src: normalizeAssetUrl(product.videoUrl),
             thumbnail: '',
             alt: `${product.name} video`
         });
@@ -158,8 +165,7 @@ function renderMainProductMedia(mediaItem, productName) {
 }
 
 function loadProductDetail() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
+    const productId = getProductIdFromLocation();
 
     if (!productId) {
         document.getElementById('product-detail').innerHTML = '<div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--text-secondary)"><p>Product not found</p></div>';
@@ -168,7 +174,7 @@ function loadProductDetail() {
 
     const product = productsData[productId];
     if (!product) {
-        document.getElementById('product-detail').innerHTML = '<div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--text-secondary)"><p>Product not found (ID: ' + productId + ')</p><p><a href="index.html" style="color:var(--primary)">Back to home</a></p></div>';
+        document.getElementById('product-detail').innerHTML = '<div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--text-secondary)"><p>Product not found (ID: ' + productId + ')</p><p><a href="/index.html" style="color:var(--primary)">Back to home</a></p></div>';
         return;
     }
 
@@ -179,7 +185,7 @@ function loadProductDetail() {
 
     const breadcrumb = document.getElementById('breadcrumb');
     if (breadcrumb) {
-        breadcrumb.innerHTML = `<a href="index.html">Home</a> &gt; ${catName ? `<a href="index.html">${escapeHtml(catName)}</a> &gt; ` : ''}<span>${escapeHtml(product.name)}</span>`;
+        breadcrumb.innerHTML = `<a href="/index.html">Home</a> &gt; ${catName ? `<a href="/index.html">${escapeHtml(catName)}</a> &gt; ` : ''}<span>${escapeHtml(product.name)}</span>`;
     }
 
     document.title = `${product.name} - 章程's Shop`;
@@ -244,6 +250,15 @@ function loadProductDetail() {
     }
 }
 
+function getProductIdFromLocation() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const directId = urlParams.get('id');
+    if (directId) return directId;
+
+    const seoMatch = window.location.pathname.match(/\/[0-9]+-[^/]*\/([0-9]+)-[^/]*\/?$/);
+    return seoMatch ? seoMatch[1] : null;
+}
+
 function addToCart(productId, buttonEl) {
     const product = productsData[productId.toString()];
     if (!product) return;
@@ -253,11 +268,13 @@ function addToCart(productId, buttonEl) {
     if (existing) {
         existing.quantity += 1;
     } else {
+        const cartImage = getCartItemImage(product);
         cart.push({
             id: cartProductId,
             name: product.name,
             price: product.price,
-            image: product.imageUrl,
+            image: cartImage,
+            mediaType: product.videoUrl && !cartImage ? 'video' : 'image',
             quantity: 1
         });
     }
@@ -342,7 +359,7 @@ function updateCartDisplay() {
     } else {
         itemsEl.innerHTML = cart.map(item => `
             <div class="cart-item">
-                <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+                ${renderCartItemMedia(item)}
                 <div class="cart-item-details">
                     <h4>${escapeHtml(item.name)}</h4>
                     <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
@@ -356,6 +373,11 @@ function updateCartDisplay() {
             </div>
         `;
         if (checkoutBtn) checkoutBtn.disabled = false;
+        itemsEl.querySelectorAll('.cart-item-image').forEach(img => {
+            img.addEventListener('error', () => {
+                img.replaceWith(createCartMediaFallback(img.dataset.mediaType));
+            }, { once: true });
+        });
 
         itemsEl.querySelectorAll('.cart-item-quantity').forEach(input => {
             input.addEventListener('change', function() {
@@ -369,6 +391,26 @@ function updateCartDisplay() {
             });
         });
     }
+}
+
+function getCartItemImage(product) {
+    const imageSet = getProductImageSets(product);
+    return normalizeAssetUrl(product.imageUrl || imageSet.thumbnails[0] || imageSet.images[0] || '');
+}
+
+function renderCartItemMedia(item) {
+    const image = normalizeAssetUrl(item.image);
+    if (!image) {
+        return `<div class="cart-item-media cart-item-media-fallback">${item.mediaType === 'video' ? 'Video' : 'Image'}</div>`;
+    }
+    return `<img class="cart-item-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.name)}" data-media-type="${escapeHtml(item.mediaType || 'image')}">`;
+}
+
+function createCartMediaFallback(mediaType) {
+    const fallback = document.createElement('div');
+    fallback.className = 'cart-item-media cart-item-media-fallback';
+    fallback.textContent = mediaType === 'video' ? 'Video' : 'Image';
+    return fallback;
 }
 
 function showNotification(message) {
@@ -397,8 +439,8 @@ async function proceedToCheckout() {
         ? await window.shopAuth.loadCurrentUser()
         : JSON.parse(localStorage.getItem('session') || '{}');
     if (!session || !session.authenticated) {
-        window.location.href = 'login.html?redirect=checkout.html';
+        window.location.href = '/login.html?redirect=/checkout.html';
         return;
     }
-    window.location.href = 'checkout.html';
+    window.location.href = '/checkout.html';
 }

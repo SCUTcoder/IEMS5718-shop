@@ -16,7 +16,7 @@
     <meta name="twitter:image"      content="images/product1.jpg">
 
     <title>章程's Shop</title>
-    <link rel="stylesheet" href="css/style.css?v=20260426-layout">
+    <link rel="stylesheet" href="/css/style.css?v=20260426-paths">
 
     <!-- Facebook SDK (Mashup / Social Plugin) -->
     <div id="fb-root"></div>
@@ -28,16 +28,16 @@
 
     <header class="header">
         <div class="header-inner">
-            <a href="index.html" class="logo">章程's Shop</a>
+            <a href="/index.html" class="logo">章程's Shop</a>
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="/index.html" class="active">Home</a></li>
             </ul>
             <div class="header-actions">
                 <div class="user-chip" id="header-user-name"><small>Signed in as</small> Guest</div>
-                <a href="admin.html" class="header-link-btn" id="admin-link" style="display:none;">Admin</a>
-                <a href="change-password.html" class="header-link-btn" id="change-password-link" style="display:none;">Password</a>
-                <a href="login.html" class="header-link-btn" id="login-link">Login</a>
-                <a href="register.html" class="header-link-btn primary" id="register-link">Register</a>
+                <a href="/admin.html" class="header-link-btn" id="admin-link" style="display:none;">Admin</a>
+                <a href="/change-password.html" class="header-link-btn" id="change-password-link" style="display:none;">Password</a>
+                <a href="/login.html" class="header-link-btn" id="login-link">Login</a>
+                <a href="/register.html" class="header-link-btn primary" id="register-link">Register</a>
                 <button type="button" class="header-link-btn" id="logout-btn" style="display:none;">Logout</button>
                 <div class="cart-container">
                     <div class="cart-icon" id="cart-toggle">
@@ -123,7 +123,7 @@
         <p>&copy; 2025 IEMS5718 Shop by 章程. All rights reserved.</p>
     </footer>
 
-    <script src="js/auth.js"></script>
+    <script src="/js/auth.js"></script>
     <script>
     const API_BASE_URL = shopAuth.API_BASE_URL;
 
@@ -141,8 +141,15 @@
     let scrollObserver = null;
 
     // ── SEO URL helpers ──
-    function slug(str) {
-        return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    function slug(str, fallback) {
+        const value = (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        return value || fallback || 'item';
+    }
+    function normalizeAssetUrl(url) {
+        const value = String(url || '').trim();
+        if (!value) return '';
+        if (/^(https?:|data:|blob:|\/)/i.test(value)) return value;
+        return '/' + value.replace(/^\.?\//, '');
     }
     function isLocal() {
         return window.location.hostname === 'localhost' ||
@@ -154,11 +161,11 @@
         const catId   = product.category?.catid || product.catid || 0;
         const catName = product.category?.name  || '';
         if (isLocal()) return `product.html?id=${encodeURIComponent(pid)}`;
-        return `/${catId}-${slug(catName)}/${pid}-${slug(product.name)}`;
+        return `/${catId}-${slug(catName, 'category')}/${pid}-${slug(product.name, 'product')}`;
     }
     function categoryUrl(cat) {
         if (isLocal()) return null; // handled client-side via activeCategory
-        return `/${cat.catid}-${slug(cat.name)}/`;
+        return `/${cat.catid}-${slug(cat.name, 'category')}/`;
     }
 
     // ==================== Init ====================
@@ -173,7 +180,11 @@
 
     function readUrlParams() {
         const params = new URLSearchParams(window.location.search);
-        const catid  = params.get('catid');
+        let catid  = params.get('catid');
+        if (!catid) {
+            const pathMatch = window.location.pathname.match(/^\/([0-9]+)-[^/]*\/?$/);
+            catid = pathMatch ? pathMatch[1] : null;
+        }
         if (catid) {
             // Activate the matching category pill (set by nginx SEO URL rewrite)
             activeCategory = catid;
@@ -320,10 +331,10 @@
             apiStatus.classList.add('show');
             apiStatus.innerHTML = '<p class="error">Backend not available. Showing demo data.</p>';
             allProducts = [
-                { pid: 1, name: 'Gaming Laptop', description: 'High-performance gaming laptop with latest specs', price: 1299.99, imageUrl: 'images/product1.jpg', category: { catid: 1, name: 'Electronics' } },
-                { pid: 2, name: 'Wireless Headphones', description: 'Premium wireless headphones with noise cancellation', price: 249.99, imageUrl: 'images/product2.jpg', category: { catid: 1, name: 'Electronics' } },
-                { pid: 3, name: 'Smart Watch', description: 'Latest smartwatch with health monitoring features', price: 399.99, imageUrl: 'images/product3.jpg', category: { catid: 1, name: 'Electronics' } },
-                { pid: 4, name: 'Tablet PC', description: 'Portable tablet perfect for work and entertainment', price: 599.99, imageUrl: 'images/product4.jpg', category: { catid: 1, name: 'Electronics' } }
+                { pid: 1, name: 'Gaming Laptop', description: 'High-performance gaming laptop with latest specs', price: 1299.99, imageUrl: '/images/product1.jpg', category: { catid: 1, name: 'Electronics' } },
+                { pid: 2, name: 'Wireless Headphones', description: 'Premium wireless headphones with noise cancellation', price: 249.99, imageUrl: '/images/product2.jpg', category: { catid: 1, name: 'Electronics' } },
+                { pid: 3, name: 'Smart Watch', description: 'Latest smartwatch with health monitoring features', price: 399.99, imageUrl: '/images/product3.jpg', category: { catid: 1, name: 'Electronics' } },
+                { pid: 4, name: 'Tablet PC', description: 'Portable tablet perfect for work and entertainment', price: 599.99, imageUrl: '/images/product4.jpg', category: { catid: 1, name: 'Electronics' } }
             ];
         }
 
@@ -372,11 +383,20 @@
 
     function getPrimaryCardMedia(product) {
         if (product.videoUrl) {
-            return { type: 'video', src: product.videoUrl };
+            return { type: 'video', src: normalizeAssetUrl(product.videoUrl) };
         }
         return {
             type: 'image',
-            src: product.imageUrl || product.thumbnailUrl || 'images/product1.jpg'
+            src: normalizeAssetUrl(product.imageUrl || product.thumbnailUrl || '/images/product1.jpg')
+        };
+    }
+
+    function getCartItemMedia(product) {
+        const primaryMedia = getPrimaryCardMedia(product);
+        const fallbackImage = normalizeAssetUrl(product.imageUrl || product.thumbnailUrl || '');
+        return {
+            image: primaryMedia.type === 'image' ? primaryMedia.src : fallbackImage,
+            mediaType: primaryMedia.type
         };
     }
 
@@ -411,11 +431,13 @@
         if (existing) {
             existing.quantity += 1;
         } else {
+            const media = getCartItemMedia(product);
             cart.push({
                 id: cartProductId,
                 name: product.name,
                 price: product.price,
-                image: product.imageUrl,
+                image: media.image,
+                mediaType: media.mediaType,
                 quantity: 1
             });
         }
@@ -501,7 +523,7 @@
         } else {
             itemsEl.innerHTML = cart.map(item => `
                 <div class="cart-item">
-                    <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+                    ${renderCartItemMedia(item)}
                     <div class="cart-item-details">
                         <h4>${escapeHtml(item.name)}</h4>
                         <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
@@ -515,6 +537,11 @@
                 </div>
             `;
             if (checkoutBtn) checkoutBtn.disabled = false;
+            itemsEl.querySelectorAll('.cart-item-image').forEach(img => {
+                img.addEventListener('error', () => {
+                    img.replaceWith(createCartMediaFallback(img.dataset.mediaType));
+                }, { once: true });
+            });
 
             itemsEl.querySelectorAll('.cart-item-quantity').forEach(input => {
                 input.addEventListener('change', function() {
@@ -579,13 +606,28 @@
         const checkoutBtn = document.getElementById('checkout-btn');
         if (checkoutBtn) {
             checkoutBtn.addEventListener('click', () => {
-                window.location.href = 'checkout.html';
+                window.location.href = '/checkout.html';
             });
         }
     }
 
     function showNotification(message) {
         shopAuth.showNotification(message);
+    }
+
+    function renderCartItemMedia(item) {
+        const image = normalizeAssetUrl(item.image);
+        if (!image) {
+            return `<div class="cart-item-media cart-item-media-fallback">${item.mediaType === 'video' ? 'Video' : 'Image'}</div>`;
+        }
+        return `<img class="cart-item-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.name)}" data-media-type="${escapeHtml(item.mediaType || 'image')}">`;
+    }
+
+    function createCartMediaFallback(mediaType) {
+        const fallback = document.createElement('div');
+        fallback.className = 'cart-item-media cart-item-media-fallback';
+        fallback.textContent = mediaType === 'video' ? 'Video' : 'Image';
+        return fallback;
     }
     </script>
 </body>

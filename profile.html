@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - Shop</title>
-    <link rel="stylesheet" href="css/style.css?v=20260426-layout">
-    <script src="js/auth.js"></script>
-    <script src="js/script.js"></script>
+    <link rel="stylesheet" href="/css/style.css?v=20260426-paths">
+    <script src="/js/auth.js"></script>
+    <script src="/js/script.js"></script>
     <style>
         .profile-container { max-width: 800px; margin: 40px auto; padding: 30px; }
         .profile-header { background: var(--ink); color: var(--bg-white); border-radius: var(--radius); padding: 30px; margin-bottom: 30px; border: 1px solid rgba(255,252,245,0.08); }
@@ -31,7 +31,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="index.html" class="brand">&#x1F6D2; SecureShop</a>
+        <a href="/index.html" class="brand">&#x1F6D2; SecureShop</a>
         <div class="nav-right" id="auth-section"></div>
     </nav>
     <div class="profile-container" id="profile-content">
@@ -45,14 +45,14 @@
             session = await window.shopAuth.loadCurrentUser();
             if (!session || !session.authenticated) {
                 document.getElementById('profile-content').innerHTML =
-                    '<div class="empty-state"><div class="icon">&#x1F512;</div><h2>Login Required</h2><p><a href="login.html">Please login</a> to view your orders.</p></div>';
+                    '<div class="empty-state"><div class="icon">&#x1F512;</div><h2>Login Required</h2><p><a href="/login.html">Please login</a> to view your orders.</p></div>';
                 return;
             }
 
             const content = document.getElementById('profile-content');
             content.innerHTML = '<div class="profile-header"><h1>Welcome, ' + escapeHtml(session.displayName || session.email) + '</h1><p>' + escapeHtml(session.email || '') + '</p></div>' +
                 '<div class="orders-section"><h2>&#x1F4E6; Recent Orders (Last 5)</h2><div id="orders-list"></div></div>' +
-                '<div style="text-align:center;margin-top:20px"><a href="index.html" style="color:var(--primary);font-size:1em">&#x2190; Back to Shop</a></div>';
+                '<div style="text-align:center;margin-top:20px"><a href="/index.html" style="color:var(--primary);font-size:1em">&#x2190; Back to Shop</a></div>';
 
             window.shopAuth.authFetch(API_BASE + '/checkout/my-orders')
                 .then(r => r.json())

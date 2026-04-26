@@ -270,11 +270,27 @@ body {
 
 .cart-item:last-of-type { border-bottom: none; }
 
-.cart-item img {
+.cart-item-image,
+.cart-item-media {
     width: 48px;
     height: 48px;
-    object-fit: cover;
     border-radius: var(--radius-sm);
+    flex: 0 0 48px;
+}
+
+.cart-item-image {
+    object-fit: cover;
+}
+
+.cart-item-media-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    color: var(--primary-hover);
+    border: 1px solid var(--border);
+    font-size: 0.68rem;
+    font-weight: 700;
 }
 
 .cart-item-details { flex: 1; }

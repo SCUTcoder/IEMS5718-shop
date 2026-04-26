@@ -179,7 +179,7 @@ async function initializeHeaderAuth() {
                 clearLocalSession();
             }
             showNotification('Logged out successfully');
-            window.location.href = 'index.html';
+            window.location.href = '/index.html';
         });
     }
 

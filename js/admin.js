@@ -24,11 +24,11 @@ let tempImageId = 0;
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await window.shopAuth.loadCurrentUser();
     if (!user.authenticated) {
-        window.location.href = 'login.html';
+        window.location.href = '/login.html';
         return;
     }
     if (!user.admin) {
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
         return;
     }
 

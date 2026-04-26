@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Shop</title>
-    <link rel="stylesheet" href="css/style.css?v=20260426-layout">
-    <script src="js/auth.js"></script>
+    <link rel="stylesheet" href="/css/style.css?v=20260426-paths">
+    <script src="/js/auth.js"></script>
     <style>
         .checkout-container { max-width: 700px; margin: 40px auto; padding: 30px; }
         .order-summary { background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
@@ -23,7 +23,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="index.html" class="brand">&#x1F6D2; SecureShop</a>
+        <a href="/index.html" class="brand">&#x1F6D2; SecureShop</a>
         <div class="nav-right">
             <div id="auth-section"></div>
         </div>
@@ -45,12 +45,12 @@
 
             if (!currentSession || !currentSession.authenticated) {
                 document.getElementById('auth-check').innerHTML =
-                    '<div class="login-prompt"><p>You need to <a href="login.html">login</a> to checkout.</p></div>';
+                    '<div class="login-prompt"><p>You need to <a href="/login.html">login</a> to checkout.</p></div>';
                 return;
             }
             if (!cart || cart.length === 0) {
                 document.getElementById('cart-check').innerHTML =
-                    '<div class="login-prompt"><p>Your cart is empty. <a href="index.html">Browse products</a></p></div>';
+                    '<div class="login-prompt"><p>Your cart is empty. <a href="/index.html">Browse products</a></p></div>';
                 return;
             }
 
