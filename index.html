@@ -416,9 +416,10 @@
     }
 
     function getPrimaryCardMedia(product) {
+        const video = normalizeAssetUrl(product.videoUrl || '');
+        if (video) return { type: 'video', src: video };
         const image = getPrimaryImage(product);
         if (image) return { type: 'image', src: image };
-        if (product.videoUrl) return { type: 'video', src: normalizeAssetUrl(product.videoUrl) };
         return {
             type: 'image',
             src: '/images/product1.jpg'

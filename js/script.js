@@ -112,31 +112,25 @@ function getPrimaryImage(product) {
 
 function buildProductMediaItems(product) {
     const imageSet = getProductImageSets(product);
-    const mediaItems = imageSet.images.map((image, index) => ({
+    const imageMediaItems = imageSet.images.map((image, index) => ({
         type: 'image',
         src: image,
         thumbnail: imageSet.thumbnails[index] || image,
         alt: `${product.name} ${index + 1}`
     }));
+    const videoSrc = normalizeAssetUrl(product.videoUrl || '');
+    const mediaItems = [];
 
-    if (product.videoUrl) {
+    if (videoSrc) {
         mediaItems.push({
             type: 'video',
-            src: normalizeAssetUrl(product.videoUrl),
+            src: videoSrc,
             thumbnail: imageSet.thumbnails[0] || imageSet.images[0] || '',
             alt: `${product.name} video`
         });
     }
 
-    if (mediaItems.length === 0 && product.videoUrl) {
-        mediaItems.push({
-            type: 'video',
-            src: normalizeAssetUrl(product.videoUrl),
-            thumbnail: '',
-            alt: `${product.name} video`
-        });
-    }
-
+    mediaItems.push(...imageMediaItems);
     return mediaItems;
 }
 
