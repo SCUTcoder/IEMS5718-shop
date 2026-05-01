@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Modern living essentials</title>
+  <desc id="desc">A soft sofa, side table, lamp, plant, cup, and book in warm neutral tones.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8ee"/><stop offset=".58" stop-color="#edd7bd"/><stop offset="1" stop-color="#c8966d"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d69b"/><stop offset=".54" stop-color="#b98042"/><stop offset="1" stop-color="#fff0c7"/></linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#5a3826" flood-opacity=".2"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="720" height="900" fill="#fffaf1" opacity=".42"/>
+  <path d="M0 740c210 132 398 142 560 32 136-92 236-137 400-102 84 18 168 59 250 104" fill="none" stroke="#e3a66f" stroke-width="1.3" opacity=".48"/>
+  <path d="M0 780c220 110 410 112 578 4 136-87 233-120 384-82 85 21 173 63 270 100" fill="none" stroke="#edc597" stroke-width="1" opacity=".52"/>
+  <g filter="url(#glow)" fill="#fffaf1">
+    <path d="M703 140l6 14 14 6-14 6-6 14-6-14-14-6 14-6z"/>
+    <path d="M1406 112l5 12 12 5-12 5-5 12-5-12-12-5 12-5z"/>
+    <path d="M984 332l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+  </g>
+  <g transform="translate(660 92)" filter="url(#soft)">
+    <ellipse cx="522" cy="700" rx="430" ry="60" fill="#9d7659" opacity=".24"/>
+    <g transform="translate(470 150)">
+      <path d="M0 0c80 42 145 116 168 232M54 10c-28 114-8 204 84 278M100 6c50 98 72 190 42 284" fill="none" stroke="#5f6b3f" stroke-width="8" stroke-linecap="round" opacity=".76"/>
+      <g fill="#70804e">
+        <ellipse cx="-8" cy="50" rx="32" ry="10" transform="rotate(-30 -8 50)"/>
+        <ellipse cx="60" cy="74" rx="36" ry="11" transform="rotate(25 60 74)"/>
+        <ellipse cx="104" cy="122" rx="36" ry="11" transform="rotate(-28 104 122)"/>
+        <ellipse cx="132" cy="186" rx="42" ry="12" transform="rotate(30 132 186)"/>
+        <ellipse cx="68" cy="184" rx="35" ry="11" transform="rotate(-25 68 184)"/>
+      </g>
+      <rect x="30" y="308" width="98" height="148" rx="26" fill="#d5bea0"/>
+      <path d="M42 322v118M66 315v132M90 315v132M114 322v118" stroke="#b89b78" stroke-width="4" opacity=".55"/>
+    </g>
+    <g transform="translate(655 292)">
+      <rect x="0" y="80" width="520" height="290" rx="34" fill="#d9c1a3"/>
+      <rect x="40" y="28" width="480" height="170" rx="30" fill="#e9d7bf"/>
+      <rect x="72" y="54" width="210" height="230" rx="22" fill="#e0c8aa"/>
+      <path d="M108 88c68 34 118 34 158 0v152H108z" fill="#e8d6c2" opacity=".88"/>
+      <path d="M66 368v92M454 368v92" stroke="#2a211a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M286 196c52 4 116-5 190-28v132c-80 22-146 26-190 12z" fill="#ead9c3"/>
+    </g>
+    <g transform="translate(140 416)">
+      <ellipse cx="178" cy="88" rx="178" ry="38" fill="#fff8ee"/>
+      <rect x="88" y="78" width="178" height="276" rx="18" fill="#d7b990"/>
+      <path d="M114 100v220M144 92v236M174 88v240M204 92v236M234 100v220" stroke="#b9966b" stroke-width="6" opacity=".55"/>
+      <ellipse cx="178" cy="80" rx="178" ry="34" fill="#f8ead8"/>
+      <rect x="96" y="34" width="120" height="28" rx="3" fill="#d5b98f"/>
+      <text x="126" y="54" fill="#8b6a46" font-size="14" font-family="Georgia">KINFOLK</text>
+      <path d="M154 18h56c20 0 36 16 36 36v10h-92z" fill="#efddc9"/>
+      <path d="M242 39c34-2 46 42 7 49" fill="none" stroke="#d6b58a" stroke-width="8"/>
+    </g>
+    <g transform="translate(335 18)">
+      <path d="M104 0h112l54 168H50z" fill="#fff1d8"/>
+      <path d="M76 24h166M90 58h140M102 94h116M116 130h88" stroke="#e2c89f" stroke-width="5" opacity=".7"/>
+      <rect x="152" y="168" width="12" height="282" fill="url(#gold)"/>
+      <circle cx="158" cy="450" r="34" fill="url(#gold)"/>
+      <path d="M160 168v74" stroke="#9e6b35" stroke-width="3"/>
+      <circle cx="160" cy="254" r="5" fill="#9e6b35"/>
+    </g>
+  </g>
+</svg>
