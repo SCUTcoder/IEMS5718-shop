@@ -72,8 +72,8 @@ body {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 18px;
-    background: rgba(55, 43, 34, 0.76);
-    border: 1px solid rgba(255, 248, 236, 0.26);
+    background: rgba(92, 78, 64, 0.68);
+    border: 1px solid rgba(255, 248, 236, 0.34);
     border-radius: var(--radius-full);
     box-shadow: 0 14px 36px rgba(33, 25, 19, 0.14);
     backdrop-filter: blur(18px) saturate(145%);
