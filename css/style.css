@@ -1,24 +1,26 @@
 /* ============================================
-   IEMS5718 Shop - Claude-inspired Design System
+   IEMS5718 Shop - ZC Boutique Brand System
    ============================================ */
 
 :root {
-    --primary: #C96442;
-    --primary-hover: #A94F35;
-    --primary-light: #F4DED4;
-    --accent: #D97757;
-    --accent-hover: #B85F43;
-    --bg: #F7F3EA;
-    --bg-white: #FFFCF5;
-    --bg-muted: #EFE8DC;
-    --text: #2B2926;
-    --text-secondary: #6F6961;
-    --text-light: #9D9488;
-    --border: #DED4C4;
-    --border-light: #ECE3D5;
+    --primary: #C86E49;
+    --primary-hover: #9F5033;
+    --primary-light: #F3D8CB;
+    --accent: #D48763;
+    --accent-hover: #B76545;
+    --bg: #F8F2E8;
+    --bg-white: #FFF9EF;
+    --bg-muted: #EFE3D1;
+    --text: #31281F;
+    --text-secondary: #6D6256;
+    --text-light: #A19385;
+    --border: #DED1BD;
+    --border-light: #EEE3D3;
     --success: #3C7A57;
     --danger: #B94A3B;
-    --ink: #161412;
+    --ink: #211913;
+    --brand-line: #D9CBB8;
+    --brand-cream: #FFF8EC;
     --shadow-sm: 0 1px 2px rgba(43,41,38,0.04);
     --shadow: 0 8px 20px rgba(43,41,38,0.06);
     --shadow-md: 0 14px 32px rgba(43,41,38,0.08);
@@ -43,7 +45,9 @@ body {
     font-family: var(--font);
     line-height: 1.6;
     color: var(--text);
-    background: var(--bg);
+    background:
+        linear-gradient(180deg, rgba(255, 250, 241, 0.9) 0%, rgba(248, 242, 232, 0.98) 42%, rgba(248, 242, 232, 1) 100%),
+        var(--bg);
     -webkit-font-smoothing: antialiased;
 }
 
@@ -54,7 +58,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(22, 20, 18, 0.96);
+    background: rgba(33, 25, 19, 0.96);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
     border-bottom: 1px solid rgba(255,252,245,0.08);
@@ -71,15 +75,47 @@ body {
 }
 
 .logo {
-    font-size: 1.25rem;
-    font-family: var(--font-serif);
-    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     color: var(--bg-white);
     text-decoration: none;
-    letter-spacing: 0;
+    min-width: 0;
 }
 
-.logo:hover { color: var(--primary); }
+.logo:hover .site-logo-text,
+.brand:hover .site-logo-text { color: #FFD3BF; }
+
+.site-logo-mark {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+.site-logo-text {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    color: var(--bg-white);
+    font-family: var(--font-serif);
+    font-size: 1.22rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    transition: color var(--transition);
+}
+
+.site-logo-text .accent {
+    color: var(--primary);
+}
+
+.site-logo-wordmark {
+    display: block;
+    width: min(100%, 620px);
+    height: auto;
+}
 
 .nav-links {
     display: flex;
@@ -379,8 +415,10 @@ body {
    ============================================ */
 .hero {
     text-align: left;
-    padding: 72px 24px 56px;
-    background: var(--bg);
+    padding: 68px 24px 58px;
+    background:
+        linear-gradient(135deg, rgba(255, 250, 241, 0.96), rgba(247, 235, 219, 0.92)),
+        var(--bg);
     color: var(--text);
     position: relative;
     overflow: hidden;
@@ -392,11 +430,16 @@ body {
     margin: 0 auto;
 }
 
+.hero-logo {
+    margin-bottom: 28px;
+    filter: drop-shadow(0 18px 32px rgba(49, 40, 31, 0.08));
+}
+
 .hero h2 {
     max-width: 760px;
     margin: 0 0 16px;
     font-family: var(--font-serif);
-    font-size: 3rem;
+    font-size: 2.65rem;
     font-weight: 500;
     letter-spacing: 0;
     line-height: 1.05;
@@ -428,7 +471,7 @@ body {
     background: var(--primary);
     color: #FFF8F1;
     padding: 0 28px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-full);
     text-decoration: none;
     font-weight: 600;
     font-size: 1rem;
@@ -1155,14 +1198,17 @@ footer a { color: var(--primary-light); }
 }
 
 .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     color: var(--bg-white);
     text-decoration: none;
-    font-family: var(--font-serif);
-    font-size: 1.2rem;
-    font-weight: 500;
 }
 
-.brand:hover { color: var(--primary); }
+.brand .site-logo-mark {
+    width: 34px;
+    height: 34px;
+}
 
 .nav-right {
     display: flex;
@@ -1196,17 +1242,30 @@ footer a { color: var(--primary-light); }
     display: grid;
     place-items: center;
     padding: 32px 16px;
-    background: var(--bg);
+    background:
+        linear-gradient(160deg, rgba(255, 250, 241, 0.96), rgba(245, 234, 219, 0.94)),
+        var(--bg);
 }
 
 .auth-card {
     width: min(100%, 460px);
     background: var(--bg-white);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
+    border: 1px solid rgba(222, 209, 189, 0.92);
+    box-shadow: 0 22px 60px rgba(49, 40, 31, 0.12);
     border-radius: var(--radius);
     padding: 32px 28px;
     backdrop-filter: blur(18px);
+}
+
+.auth-logo {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 22px;
+}
+
+.auth-logo img {
+    width: min(100%, 300px);
+    height: auto;
 }
 
 .auth-back-link {
@@ -1352,6 +1411,9 @@ footer a { color: var(--primary-light); }
         line-height: 1.2;
     }
 
+    .site-logo-text { font-size: 1.12rem; }
+    .site-logo-mark { width: 34px; height: 34px; }
+
     .nav-links { display: none; }
     .nav-links a { font-size: 0.85rem; }
     .header-actions {
@@ -1364,7 +1426,8 @@ footer a { color: var(--primary-light); }
     .user-chip { display: none; }
 
     .hero { padding: 44px 20px 36px; }
-    .hero h2 { font-size: 2.1rem; }
+    .hero h2 { font-size: 2rem; }
+    .hero-logo { margin-bottom: 22px; }
     .hero-actions { align-items: stretch; }
     .hero-btn { width: 100%; }
     .social-bar { width: 100%; }
