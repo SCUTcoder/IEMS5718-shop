@@ -41,11 +41,12 @@
     </div>
     <script>
         const API_BASE = window.shopAuth.API_BASE_URL;
+        const MAX_CART_QUANTITY = 99;
         let currentSession = null;
 
         async function init() {
             currentSession = await window.shopAuth.loadCurrentUser();
-            const cart = JSON.parse(localStorage.getItem('iems5718-cart') || '[]');
+            const cart = getSanitizedCart();
 
             if (!currentSession || !currentSession.authenticated) {
                 document.getElementById('auth-check').innerHTML =
@@ -85,7 +86,13 @@
             btn.textContent = 'Processing...';
             document.getElementById('status-msg').textContent = 'Creating secure order...';
 
-            const cart = JSON.parse(localStorage.getItem('iems5718-cart') || '[]');
+            const cart = getSanitizedCart();
+            if (!cart.length) {
+                document.getElementById('status-msg').textContent = 'Your cart is empty.';
+                btn.disabled = false;
+                btn.textContent = 'Proceed to Checkout';
+                return;
+            }
             const items = cart.map(item => ({ pid: item.id, quantity: item.quantity }));
 
             window.shopAuth.authFetch(API_BASE + '/checkout/create', {
@@ -117,6 +124,43 @@
                 btn.disabled = false;
                 btn.textContent = 'Proceed to Checkout';
             });
+        }
+
+        function getSanitizedCart() {
+            let raw;
+            try {
+                raw = JSON.parse(localStorage.getItem('iems5718-cart') || '[]');
+            } catch (error) {
+                localStorage.setItem('iems5718-cart', '[]');
+                return [];
+            }
+            if (!Array.isArray(raw)) {
+                localStorage.setItem('iems5718-cart', '[]');
+                return [];
+            }
+            let changed = false;
+            const cart = raw.filter(item => {
+                const quantity = sanitizeCartQuantity(item.quantity);
+                if (quantity <= 0) {
+                    changed = true;
+                    return false;
+                }
+                if (item.quantity !== quantity) {
+                    item.quantity = quantity;
+                    changed = true;
+                }
+                return true;
+            });
+            if (changed || cart.length !== raw.length) {
+                localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+            }
+            return cart;
+        }
+
+        function sanitizeCartQuantity(value) {
+            const quantity = Number.parseInt(value, 10);
+            if (!Number.isFinite(quantity) || quantity <= 0) return 0;
+            return Math.min(quantity, MAX_CART_QUANTITY);
         }
 
         function escapeHtml(v) { return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

@@ -6,6 +6,7 @@ const API_BASE_URL = window.shopAuth ? window.shopAuth.API_BASE_URL : (
         ? 'http://localhost:8080/api'
         : window.location.origin + '/api'
 );
+const MAX_CART_QUANTITY = 99;
 
 let productsData = {};
 let cart = [];
@@ -245,6 +246,16 @@ function getProductIdFromLocation() {
     return seoMatch ? seoMatch[1] : null;
 }
 
+function sanitizeCartQuantity(value) {
+    const quantity = Number.parseInt(value, 10);
+    if (!Number.isFinite(quantity) || quantity <= 0) return 0;
+    return Math.min(quantity, MAX_CART_QUANTITY);
+}
+
+function persistCart() {
+    localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+}
+
 function addToCart(productId, buttonEl) {
     const product = productsData[productId.toString()];
     if (!product) return;
@@ -252,7 +263,7 @@ function addToCart(productId, buttonEl) {
     const cartProductId = (product.pid || product.id).toString();
     const existing = cart.find(item => item.id === cartProductId);
     if (existing) {
-        existing.quantity += 1;
+        existing.quantity = Math.min(sanitizeCartQuantity(existing.quantity) + 1, MAX_CART_QUANTITY);
     } else {
         const cartImage = getCartItemImage(product);
         cart.push({
@@ -265,7 +276,7 @@ function addToCart(productId, buttonEl) {
         });
     }
 
-    localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+    persistCart();
     updateCartDisplay();
 
     if (buttonEl) {
@@ -312,18 +323,19 @@ function flyToCart(btnEl) {
 }
 
 function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+    cart = cart.filter(item => String(item.id) !== String(productId));
+    persistCart();
     updateCartDisplay();
 }
 
 function updateCartQuantity(productId, newQty) {
     const item = cart.find(item => String(item.id) === String(productId));
     if (item) {
-        item.quantity = parseInt(newQty);
-        if (item.quantity <= 0) removeFromCart(productId);
+        const quantity = sanitizeCartQuantity(newQty);
+        if (quantity <= 0) removeFromCart(productId);
         else {
-            localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+            item.quantity = quantity;
+            persistCart();
             updateCartDisplay();
         }
     }
@@ -336,18 +348,28 @@ function updateCartDisplay() {
     if (!countEl || !itemsEl) return;
 
     let cartChanged = false;
-    cart.forEach(item => {
+    cart = cart.filter(item => {
+        const quantity = sanitizeCartQuantity(item.quantity);
+        if (quantity <= 0) {
+            cartChanged = true;
+            return false;
+        }
+        if (item.quantity !== quantity) {
+            item.quantity = quantity;
+            cartChanged = true;
+        }
         const product = productsData[String(item.id)] || productsData[item.id];
-        if (!product) return;
+        if (!product) return true;
         const image = getCartItemImage(product);
         if (image && item.image !== image) {
             item.image = image;
             item.mediaType = 'image';
             cartChanged = true;
         }
+        return true;
     });
     if (cartChanged) {
-        localStorage.setItem('iems5718-cart', JSON.stringify(cart));
+        persistCart();
     }
 
     const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
@@ -364,7 +386,7 @@ function updateCartDisplay() {
                 <div class="cart-item-details">
                     <h4>${escapeHtml(item.name)}</h4>
                     <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
-                    <input type="number" class="cart-item-quantity" value="${item.quantity}" min="1" data-product-id="${item.id}">
+                    <input type="number" class="cart-item-quantity" value="${item.quantity}" min="1" max="${MAX_CART_QUANTITY}" step="1" data-product-id="${item.id}">
                 </div>
                 <button class="cart-item-remove" data-product-id="${item.id}">×</button>
             </div>
@@ -383,6 +405,11 @@ function updateCartDisplay() {
         itemsEl.querySelectorAll('.cart-item-quantity').forEach(input => {
             input.addEventListener('change', function() {
                 updateCartQuantity(this.dataset.productId, this.value);
+            });
+            input.addEventListener('input', function() {
+                if (sanitizeCartQuantity(this.value) >= MAX_CART_QUANTITY) {
+                    this.value = MAX_CART_QUANTITY;
+                }
             });
         });
 

@@ -67,7 +67,12 @@ public class CheckoutController {
             summaries.add(s);
         }
 
-        OrderResponse orderResponse = orderService.createOrder(username, summaries);
+        OrderResponse orderResponse;
+        try {
+            orderResponse = orderService.createOrder(username, summaries);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("orderId", orderResponse.getOrderId());

@@ -18,8 +18,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -35,6 +33,7 @@ public class OrderService {
     public final ProductRepository productRepository;
     
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    public static final int MAX_ITEM_QUANTITY = 99;
 
     public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductRepository productRepository) {
         this.orderRepository = orderRepository;
@@ -56,8 +55,14 @@ public class OrderService {
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (CartItemSummary item : items) {
+            if (item.pid == null) {
+                throw new IllegalArgumentException("Product id is required");
+            }
             if (item.quantity == null || item.quantity <= 0) {
                 throw new IllegalArgumentException("Quantity must be a positive number");
+            }
+            if (item.quantity > MAX_ITEM_QUANTITY) {
+                throw new IllegalArgumentException("Quantity must not exceed " + MAX_ITEM_QUANTITY);
             }
             Product product = productRepository.findById(item.pid)
                     .orElseThrow(() -> new IllegalArgumentException("Product not found: " + item.pid));
